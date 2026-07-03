@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 
 /* =========================
-   HOME PAGE
+   HOME PAGE (UI DASHBOARD)
 ========================= */
 app.get("/", (req, res) => {
   res.send(`
@@ -11,13 +11,13 @@ app.get("/", (req, res) => {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BLUE</title>
+<title>BLUE Community</title>
 
 <style>
 body{
 margin:0;
 font-family:Arial;
-background:#0f172a;
+background:linear-gradient(135deg,#0f172a,#1e3a8a);
 color:white;
 display:flex;
 justify-content:center;
@@ -26,18 +26,19 @@ height:100vh;
 }
 
 .card{
-background:#111827;
+background:rgba(17,24,39,0.9);
 padding:40px;
-border-radius:15px;
+border-radius:20px;
 text-align:center;
-box-shadow:0 0 25px rgba(59,130,246,0.4);
-max-width:350px;
+box-shadow:0 0 25px rgba(59,130,246,0.5);
 width:90%;
+max-width:400px;
 }
 
 h1{
 color:#60a5fa;
 margin-bottom:10px;
+font-size:32px;
 }
 
 .status{
@@ -49,8 +50,24 @@ background:#16a34a;
 font-size:12px;
 }
 
-small{
-color:#94a3b8;
+.info{
+margin-top:15px;
+color:#cbd5e1;
+font-size:14px;
+}
+
+.btn{
+display:inline-block;
+margin-top:20px;
+padding:10px 20px;
+background:#2563eb;
+color:white;
+text-decoration:none;
+border-radius:10px;
+}
+
+.btn:hover{
+background:#1d4ed8;
 }
 </style>
 
@@ -60,10 +77,15 @@ color:#94a3b8;
 
 <div class="card">
 <h1>💙 BLUE SYSTEM</h1>
-<p>Stable Server Running</p>
-<div class="status">ONLINE</div>
-<br><br>
-<small>Node.js + Express • Render Hosting</small>
+<p>Latest Stable Version Running</p>
+
+<div class="status">🟢 ONLINE</div>
+
+<div class="info">
+Node.js + Express • Render Cloud • Stable Build
+</div>
+
+<a class="btn" href="/status">Check API</a>
 </div>
 
 </body>
@@ -77,25 +99,12 @@ color:#94a3b8;
 app.get("/status", (req, res) => {
   res.json({
     project: "BLUE",
+    version: "latest-stable",
     status: "LIVE",
-    version: "stable-core",
-    server: "render",
-    uptime: process.uptime()
+    server: "Render",
+    uptime: process.uptime(),
+    memory: process.memoryUsage()
   });
 });
 
-/* =========================
-   HEALTH CHECK (OPTIONAL)
-========================= */
-app.get("/health", (req, res) => {
-  res.send("OK");
-});
-
-/* =========================
-   START SERVER
-========================= */
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log("BLUE stable running on port " + PORT);
-});
+/*
