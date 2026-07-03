@@ -1,155 +1,133 @@
 const express = require("express");
 const app = express();
 
+/* =========================
+   HOME PAGE
+========================= */
 app.get("/", (req, res) => {
   res.send(`
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BLUE Community</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
 body{
-font-family:Arial,sans-serif;
+margin:0;
+font-family:Arial;
 background:#0f172a;
 color:white;
 }
 
-header{
+nav{
 background:#111827;
-padding:20px;
-text-align:center;
-font-size:30px;
-font-weight:bold;
+padding:15px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+nav a{
+color:white;
+text-decoration:none;
+margin:0 10px;
+}
+
+.logo{
 color:#60a5fa;
+font-weight:bold;
+font-size:20px;
 }
 
 .container{
-max-width:1100px;
-margin:auto;
-padding:30px;
+text-align:center;
+padding:80px 20px;
 }
 
-.grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-gap:20px;
-}
-
-.card{
-background:#1e293b;
-border-radius:15px;
-padding:20px;
-box-shadow:0 0 15px rgba(59,130,246,.35);
-}
-
-.card h2{
+h1{
+font-size:40px;
 color:#60a5fa;
-margin-bottom:10px;
 }
 
-.live{
+.btn{
 display:inline-block;
-padding:8px 15px;
-border-radius:20px;
-background:#16a34a;
-margin-top:10px;
+margin-top:20px;
+padding:10px 20px;
+background:#2563eb;
+border-radius:10px;
+color:white;
+text-decoration:none;
 }
 
 footer{
 text-align:center;
-padding:30px;
+padding:20px;
 color:#94a3b8;
-}
-
-button{
-padding:10px 20px;
-border:none;
-border-radius:10px;
-background:#2563eb;
-color:white;
-cursor:pointer;
-margin-top:15px;
-}
-
-button:hover{
-background:#1d4ed8;
+margin-top:50px;
 }
 </style>
+
 </head>
 
 <body>
 
-<header>
-💙 BLUE Community
-</header>
+<nav>
+<div class="logo">💙 BLUE</div>
+<div>
+<a href="/">Home</a>
+<a href="/about">About</a>
+<a href="/status">Status</a>
+</div>
+</nav>
 
 <div class="container">
-
-<div class="grid">
-
-<div class="card">
-<h2>System</h2>
-<p>BLUE Community Server</p>
-<div class="live">🟢 LIVE</div>
-</div>
-
-<div class="card">
-<h2>Platform</h2>
-<p>Render Cloud</p>
-</div>
-
-<div class="card">
-<h2>Backend</h2>
-<p>Node.js + Express</p>
-</div>
-
-<div class="card">
-<h2>Version</h2>
-<p>BLUE v2</p>
-</div>
-
-</div>
-
-<div style="text-align:center;margin-top:40px;">
-<h2 id="clock"></h2>
-<button onclick="location.reload()">Refresh</button>
-</div>
-
+<h1>Welcome to BLUE v3</h1>
+<p>Simple • Fast • Live on Render 🚀</p>
+<a class="btn" href="/status">Check System</a>
 </div>
 
 <footer>
 BLUE Community © 2026
 </footer>
 
-<script>
-function updateClock(){
-document.getElementById("clock").innerHTML =
-new Date().toLocaleTimeString();
-}
-setInterval(updateClock,1000);
-updateClock();
-</script>
-
 </body>
 </html>
-`);
+  `);
 });
 
-app.get("/status", (req,res)=>{
-res.json({
-project:"BLUE",
-status:"LIVE",
-version:"2.0",
-server:"Render"
-});
+/* =========================
+   ABOUT PAGE
+========================= */
+app.get("/about", (req, res) => {
+  res.send(`
+  <h1 style="color:#60a5fa;text-align:center;margin-top:100px;">
+  About BLUE
+  </h1>
+  <p style="text-align:center;color:white;">
+  BLUE Community is a simple Node.js project running on Render.
+  </p>
+  `);
 });
 
+/* =========================
+   STATUS API
+========================= */
+app.get("/status", (req, res) => {
+  res.json({
+    project: "BLUE",
+    version: "3.0",
+    status: "LIVE",
+    server: "Render"
+  });
+});
+
+/* =========================
+   SERVER START
+========================= */
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT,()=>{
-console.log("BLUE v2 running on port " + PORT);
+app.listen(PORT, () => {
+  console.log("BLUE v3 running on port " + PORT);
 });
