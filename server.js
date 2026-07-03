@@ -2,23 +2,37 @@ const express = require("express");
 const app = express();
 
 app.get("/", (req, res) => {
-  res.send("💙 BLUE IS LIVE 🚀");
-});
-
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log("BLUE running");
-});
-const express = require("express");
-const app = express();
-
-app.get("/", (req, res) => {
   res.send(`
     <html>
-      <body style="background:#0a0f2c;color:white;text-align:center;padding-top:100px;">
-        <h1 style="color:#60a5fa;">💙 BLUE COMMUNITY</h1>
-        <p>UPDATED SUCCESS 🚀</p>
+      <head>
+        <title>Blue Live</title>
+        <style>
+          body {
+            margin: 0;
+            font-family: Arial;
+            background: linear-gradient(135deg, #0a0f2c, #1e3a8a);
+            color: white;
+            text-align: center;
+            padding-top: 120px;
+          }
+          .card {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 20px;
+            width: 300px;
+            margin: auto;
+            box-shadow: 0 0 20px #3b82f6;
+          }
+          h1 {
+            color: #60a5fa;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <h1>💙 BLUE LIVE</h1>
+          <p>Running on Render 🚀</p>
+        </div>
       </body>
     </html>
   `);
@@ -27,5 +41,5 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log("BLUE updated");
+  console.log("Blue UI running");
 });
