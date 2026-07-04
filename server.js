@@ -1,17 +1,14 @@
 import express from "express";
-import mongoose from "mongoose";
-import redis from "redis";
 
 const app = express();
 app.use(express.json());
 
-mongoose.connect("mongodb://localhost/blue");
+function aiEngine(input){
+  return `AI processed: ${input}`;
+}
 
-const client = redis.createClient();
-await client.connect();
-
-app.get("/status", async (req,res)=>{
-  res.json({ system:"V10 ENTERPRISE READY" });
+app.post("/ai",(req,res)=>{
+  res.json({ result: aiEngine(req.body.text) });
 });
 
 app.listen(3000);
