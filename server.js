@@ -1,24 +1,25 @@
 import express from "express";
 import jwt from "jsonwebtoken";
+import helmet from "helmet";
 
 const app = express();
 app.use(express.json());
+app.use(helmet());
 
-const users = [];
-const SECRET = "blue_secret";
+const SECRET = "blue_v8";
 
-app.post("/register", (req, res) => {
-  users.push(req.body);
-  res.json({ ok: true });
-});
+function auth(req,res,next){
+  try{
+    const token = req.headers.authorization.split(" ")[1];
+    jwt.verify(token, SECRET);
+    next();
+  }catch{
+    res.status(401).send("NO ACCESS");
+  }
+}
 
-app.post("/login", (req, res) => {
-  const token = jwt.sign(req.body, SECRET);
-  res.json({ token });
-});
-
-app.get("/dashboard", (req, res) => {
-  res.json({ system: "BLUE V7.3 DASHBOARD ACTIVE" });
+app.get("/secure", auth, (req,res)=>{
+  res.json({ system:"V8 SECURE CORE" });
 });
 
 app.listen(3000);
