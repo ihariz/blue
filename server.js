@@ -1,17 +1,24 @@
 import express from "express";
+import jwt from "jsonwebtoken";
 
 const app = express();
 app.use(express.json());
 
 const users = [];
+const SECRET = "blue_secret";
 
 app.post("/register", (req, res) => {
   users.push(req.body);
-  res.json({ ok: true, users });
+  res.json({ ok: true });
 });
 
-app.get("/status", (req, res) => {
-  res.json({ system: "BLUE V7.2 BASIC", users: users.length });
+app.post("/login", (req, res) => {
+  const token = jwt.sign(req.body, SECRET);
+  res.json({ token });
 });
 
-app.listen(3000, () => console.log("BLUE V7.2 RUNNING"));
+app.get("/dashboard", (req, res) => {
+  res.json({ system: "BLUE V7.3 DASHBOARD ACTIVE" });
+});
+
+app.listen(3000);
