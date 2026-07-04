@@ -1,25 +1,17 @@
 import express from "express";
-import jwt from "jsonwebtoken";
-import helmet from "helmet";
+import http from "http";
+import { Server } from "socket.io";
 
 const app = express();
-app.use(express.json());
-app.use(helmet());
+const server = http.createServer(app);
+const io = new Server(server);
 
-const SECRET = "blue_v8";
-
-function auth(req,res,next){
-  try{
-    const token = req.headers.authorization.split(" ")[1];
-    jwt.verify(token, SECRET);
-    next();
-  }catch{
-    res.status(401).send("NO ACCESS");
-  }
-}
-
-app.get("/secure", auth, (req,res)=>{
-  res.json({ system:"V8 SECURE CORE" });
+app.get("/", (req,res)=>{
+  res.send("BLUE V9 AI CORE");
 });
 
-app.listen(3000);
+io.on("connection",(socket)=>{
+  socket.emit("status",{ai:"online"});
+});
+
+server.listen(3000);
