@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 
 /* =========================
-   HOME
+   HOME PAGE (LOGIN ENTRY)
 ========================= */
 app.get("/", (req, res) => {
   res.send(`
@@ -11,7 +11,7 @@ app.get("/", (req, res) => {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BLUE v5.3</title>
+<title>BLUE v6</title>
 
 <style>
 body{
@@ -19,87 +19,55 @@ margin:0;
 font-family:Arial;
 background: radial-gradient(circle at top,#1e3a8a,#0f172a);
 color:white;
-}
-
-/* NAV */
-nav{
-display:flex;
-justify-content:space-between;
-padding:15px 25px;
-background:rgba(17,24,39,0.9);
-backdrop-filter: blur(10px);
-position:sticky;
-top:0;
-}
-
-.logo{
-color:#60a5fa;
-font-weight:bold;
-}
-
-nav a{
-color:#cbd5e1;
-margin-left:15px;
-text-decoration:none;
-}
-
-nav a:hover{
-color:white;
-}
-
-/* HERO */
-.hero{
-text-align:center;
-padding:80px 20px;
-}
-
-.hero h1{
-font-size:42px;
-color:#60a5fa;
-text-shadow:0 0 15px rgba(96,165,250,0.7);
-animation: glow 2s infinite alternate;
-}
-
-@keyframes glow{
-from{ text-shadow:0 0 10px rgba(96,165,250,0.4); }
-to{ text-shadow:0 0 25px rgba(96,165,250,0.9); }
-}
-
-.hero p{
-color:#94a3b8;
-}
-
-/* CARDS */
-.container{
 display:flex;
 justify-content:center;
-flex-wrap:wrap;
-gap:20px;
-padding:20px;
+align-items:center;
+height:100vh;
 }
 
-.card{
+.box{
 background:rgba(17,24,39,0.9);
-padding:25px;
-border-radius:15px;
-width:250px;
-text-align:center;
-transition:0.3s;
-box-shadow:0 0 20px rgba(59,130,246,0.2);
-}
-
-.card:hover{
-transform:translateY(-8px);
-box-shadow:0 0 35px rgba(59,130,246,0.6);
-}
-
-.badge{
-display:inline-block;
-margin-top:10px;
-padding:6px 12px;
+padding:40px;
 border-radius:20px;
-background:linear-gradient(90deg,#16a34a,#22c55e);
+text-align:center;
+box-shadow:0 0 30px rgba(59,130,246,0.4);
+width:90%;
+max-width:400px;
+}
+
+h1{
+color:#60a5fa;
+margin-bottom:10px;
+}
+
+input{
+width:90%;
+padding:10px;
+margin:8px 0;
+border:none;
+border-radius:10px;
+outline:none;
+}
+
+button{
+width:95%;
+padding:10px;
+margin-top:10px;
+border:none;
+border-radius:10px;
+background:#2563eb;
+color:white;
+cursor:pointer;
+}
+
+button:hover{
+background:#1d4ed8;
+}
+
+.small{
+color:#94a3b8;
 font-size:12px;
+margin-top:10px;
 }
 </style>
 
@@ -107,40 +75,17 @@ font-size:12px;
 
 <body>
 
-<nav>
-<div class="logo">💙 BLUE v5.3</div>
-<div>
-<a href="/">Home</a>
-<a href="/about">About</a>
-<a href="/status">Status</a>
-</div>
-</nav>
+<div class="box">
+<h1>💙 BLUE v6</h1>
+<p>Login System (Demo)</p>
 
-<div class="hero">
-<h1>BLUE SYSTEM</h1>
-<p>Simple • Clean • Premium UI</p>
-</div>
+<form action="/dashboard">
+<input type="text" placeholder="Username" required>
+<input type="password" placeholder="Password" required>
+<button type="submit">Login</button>
+</form>
 
-<div class="container">
-
-<div class="card">
-<h3>Server</h3>
-<p>Stable on Render</p>
-<div class="badge">LIVE</div>
-</div>
-
-<div class="card">
-<h3>Performance</h3>
-<p>Lightweight System</p>
-<div class="badge">FAST</div>
-</div>
-
-<div class="card">
-<h3>Status</h3>
-<p>All systems running</p>
-<div class="badge">OK</div>
-</div>
-
+<div class="small">System Stable • No Database Yet</div>
 </div>
 
 </body>
@@ -149,34 +94,92 @@ font-size:12px;
 });
 
 /* =========================
-   ABOUT
+   DASHBOARD (AFTER LOGIN)
 ========================= */
-app.get("/about", (req, res) => {
+app.get("/dashboard", (req, res) => {
   res.send(`
-  <div style="text-align:center;margin-top:80px;font-family:Arial;">
-    <h1 style="color:#60a5fa;">About BLUE</h1>
-    <p style="color:#94a3b8;">BLUE v5.3 - UI improved version</p>
-  </div>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard</title>
+
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:#0f172a;
+color:white;
+}
+
+nav{
+background:#111827;
+padding:15px;
+display:flex;
+justify-content:space-between;
+}
+
+nav a{
+color:#cbd5e1;
+margin-left:15px;
+text-decoration:none;
+}
+
+.container{
+padding:40px;
+text-align:center;
+}
+
+.card{
+background:#111827;
+padding:30px;
+border-radius:15px;
+display:inline-block;
+box-shadow:0 0 20px rgba(59,130,246,0.3);
+}
+</style>
+
+</head>
+
+<body>
+
+<nav>
+<div>💙 BLUE v6</div>
+<div>
+<a href="/">Logout</a>
+</div>
+</nav>
+
+<div class="container">
+<div class="card">
+<h1>Welcome to BLUE Dashboard</h1>
+<p>Status: LIVE SYSTEM</p>
+</div>
+</div>
+
+</body>
+</html>
   `);
 });
 
 /* =========================
-   STATUS
+   STATUS API
 ========================= */
 app.get("/status", (req, res) => {
   res.json({
     project: "BLUE",
-    version: "5.3",
+    version: "6.0",
     status: "LIVE",
-    uptime: process.uptime()
+    feature: "login-demo"
   });
 });
 
 /* =========================
-   SERVER
+   SERVER START
 ========================= */
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log("BLUE v5.3 running on " + PORT);
+  console.log("BLUE v6 running on " + PORT);
 });
