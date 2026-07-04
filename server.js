@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 
 /* =========================
-   HOME (LOGIN PAGE POLISHED)
+   HOME (LOGIN UI IMPROVED)
 ========================= */
 app.get("/", (req, res) => {
   res.send(`
@@ -11,70 +11,77 @@ app.get("/", (req, res) => {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BLUE v6.5</title>
+<title>BLUE v6.6</title>
 
 <style>
 body{
 margin:0;
 font-family:Arial;
-background: radial-gradient(circle at top,#1e3a8a,#0f172a);
+background: radial-gradient(circle at top,#0f172a,#1e3a8a);
 color:white;
 display:flex;
 justify-content:center;
 align-items:center;
 height:100vh;
-padding:20px;
+padding:15px;
 }
 
 /* CARD */
 .box{
 background:rgba(17,24,39,0.92);
-padding:45px;
-border-radius:20px;
+padding:42px;
+border-radius:22px;
 text-align:center;
-box-shadow:0 0 40px rgba(59,130,246,0.4);
+box-shadow:0 0 45px rgba(59,130,246,0.35);
 width:100%;
 max-width:420px;
-backdrop-filter: blur(10px);
+backdrop-filter: blur(12px);
+transition:0.3s;
+}
+
+.box:hover{
+transform:scale(1.01);
 }
 
 /* TITLE */
 h1{
 color:#60a5fa;
+font-size:36px;
 margin-bottom:5px;
-font-size:34px;
+text-shadow:0 0 15px rgba(96,165,250,0.5);
 }
 
 .sub{
 color:#94a3b8;
-margin-bottom:20px;
-font-size:14px;
+font-size:13px;
+margin-bottom:18px;
 }
 
 /* INPUT */
 input{
-width:90%;
+width:92%;
 padding:12px;
 margin:8px 0;
-border:none;
 border-radius:10px;
-outline:none;
+border:1px solid #1f2937;
 background:#0f172a;
 color:white;
-border:1px solid #1f2937;
+outline:none;
+transition:0.3s;
 }
 
 input:focus{
 border:1px solid #3b82f6;
+box-shadow:0 0 10px rgba(59,130,246,0.3);
 }
 
 /* BUTTON */
 button{
-width:95%;
+width:96%;
 padding:12px;
 margin-top:12px;
 border:none;
-border-radius:10px;
+border-radius:12px;
 background:linear-gradient(90deg,#2563eb,#3b82f6);
 color:white;
 font-weight:bold;
@@ -84,14 +91,14 @@ transition:0.3s;
 
 button:hover{
 transform:scale(1.03);
-box-shadow:0 0 20px rgba(59,130,246,0.6);
+box-shadow:0 0 25px rgba(59,130,246,0.6);
 }
 
-/* FOOTER TEXT */
+/* FOOTER */
 .small{
 color:#64748b;
 font-size:12px;
-margin-top:15px;
+margin-top:14px;
 }
 </style>
 
@@ -101,15 +108,15 @@ margin-top:15px;
 
 <div class="box">
 <h1>💙 BLUE</h1>
-<div class="sub">Secure • Simple • SaaS Style</div>
+<div class="sub">Secure • Stable • Clean UI</div>
 
 <form action="/dashboard">
 <input type="text" placeholder="Username" required>
 <input type="password" placeholder="Password" required>
-<button type="submit">LOGIN</button>
+<button type="submit">ENTER</button>
 </form>
 
-<div class="small">v6.5 Polish UI • Stable System</div>
+<div class="small">v6.6 Polish • Stable Build</div>
 </div>
 
 </body>
@@ -118,7 +125,7 @@ margin-top:15px;
 });
 
 /* =========================
-   DASHBOARD (POLISHED)
+   DASHBOARD
 ========================= */
 app.get("/dashboard", (req, res) => {
   res.send(`
@@ -127,7 +134,7 @@ app.get("/dashboard", (req, res) => {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dashboard</title>
+<title>BLUE Dashboard</title>
 
 <style>
 body{
@@ -141,12 +148,11 @@ color:white;
 nav{
 display:flex;
 justify-content:space-between;
-align-items:center;
-padding:15px 25px;
+padding:15px 20px;
 background:rgba(17,24,39,0.95);
-backdrop-filter: blur(10px);
 position:sticky;
 top:0;
+backdrop-filter: blur(10px);
 }
 
 nav a{
@@ -165,21 +171,22 @@ padding:40px;
 text-align:center;
 }
 
+/* CARD */
 .card{
 background:rgba(17,24,39,0.9);
 padding:35px;
-border-radius:15px;
+border-radius:18px;
 display:inline-block;
-box-shadow:0 0 30px rgba(59,130,246,0.3);
+box-shadow:0 0 35px rgba(59,130,246,0.25);
 transition:0.3s;
-max-width:400px;
 }
 
 .card:hover{
-transform:translateY(-5px);
-box-shadow:0 0 40px rgba(59,130,246,0.6);
+transform:translateY(-6px);
+box-shadow:0 0 45px rgba(59,130,246,0.6);
 }
 
+/* BADGE */
 .badge{
 display:inline-block;
 margin-top:10px;
@@ -195,7 +202,7 @@ font-size:12px;
 <body>
 
 <nav>
-<div>💙 BLUE v6.5</div>
+<div>💙 BLUE v6.6</div>
 <div>
 <a href="/">Logout</a>
 </div>
@@ -204,8 +211,8 @@ font-size:12px;
 <div class="container">
 <div class="card">
 <h1>Welcome Back</h1>
-<p>BLUE Enterprise Dashboard</p>
-<div class="badge">LIVE SYSTEM</div>
+<p>BLUE Enterprise System</p>
+<div class="badge">LIVE STABLE</div>
 </div>
 </div>
 
@@ -220,9 +227,9 @@ font-size:12px;
 app.get("/status", (req, res) => {
   res.json({
     project: "BLUE",
-    version: "6.5",
+    version: "6.6",
     status: "LIVE",
-    ui: "polished",
+    level: "polish-final",
     uptime: process.uptime()
   });
 });
@@ -233,5 +240,5 @@ app.get("/status", (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log("BLUE v6.5 running on " + PORT);
+  console.log("BLUE v6.6 running on " + PORT);
 });
