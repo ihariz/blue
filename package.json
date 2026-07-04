@@ -1,7 +1,23 @@
 {
-  "name": "blue-v12",
-  "version": "12.0.0",
+  "name": "blue-saas-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
   "dependencies": {
-    "express": "^4.19.2"
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.5.2",
+    "morgan": "^1.10.0",
+    "redis": "^4.6.13",
+    "socket.io": "^4.7.5",
+    "stripe": "^16.2.0"
   }
 }
