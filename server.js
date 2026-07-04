@@ -1,180 +1,146 @@
-// ===============================
-// BLUE LEVEL 10 - ENTERPRISE SAAS CORE
-// ===============================
-
 import express from "express";
 import http from "http";
-import cors from "cors";
-import helmet from "helmet";
-import morgan from "morgan";
-import rateLimit from "express-rate-limit";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
-import mongoose from "mongoose";
-import { createClient } from "redis";
-import Stripe from "stripe";
 import { Server } from "socket.io";
-import dotenv from "dotenv";
+import fs from "fs";
+import crypto from "crypto";
 
-dotenv.config();
-
-// ===============================
-// INIT CORE
-// ===============================
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-const PORT = process.env.PORT || 3000;
-
-// ===============================
-// DB (MongoDB)
-// ===============================
-mongoose.connect(process.env.MONGO_URL)
-  .then(() => console.log("MongoDB Connected"))
-  .catch(err => console.log(err));
-
-// ===============================
-// REDIS (CACHE)
-// ===============================
-const redis = createClient({ url: process.env.REDIS_URL });
-redis.connect().then(() => console.log("Redis Connected"));
-
-// ===============================
-// SECURITY MIDDLEWARE
-// ===============================
 app.use(express.json());
-app.use(cors());
-app.use(helmet());
-app.use(morgan("dev"));
-
-// Rate limit (anti brute force / DDoS basic layer)
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 200
-});
-app.use(limiter);
 
 // ===============================
-// RBAC ROLES
+// 🧠 SYSTEM MEMORY (LONG TERM AI STATE)
 // ===============================
-const ROLES = {
-  USER: "user",
-  ADMIN: "admin",
-  AGENT: "agent"
+const MEMORY = {
+  goals: ["stability", "scalability", "self-healing"],
+  learnedPatterns: [],
+  threats: [],
+  optimizations: []
 };
 
 // ===============================
-// MONGOOSE MODEL
+// 🔁 AUTONOMOUS LOOP ENGINE
 // ===============================
-const UserSchema = new mongoose.Schema({
-  email: String,
-  password: String,
-  role: { type: String, default: "user" },
-  plan: { type: String, default: "free" },
-  stripeCustomerId: String
-});
+async function autonomousLoop() {
+  while (true) {
 
-const User = mongoose.model("User", UserSchema);
+    const state = analyzeSystem();
+    const decision = AI_DECISION_ENGINE(state);
 
-// ===============================
-// AUTH MIDDLEWARE
-// ===============================
-function auth(req, res, next) {
-  const token = req.headers.authorization;
-  if (!token) return res.status(403).json({ error: "NO TOKEN" });
+    if (decision.action === "REWRITE_SYSTEM") {
+      rewriteCore(decision.patch);
+    }
 
-  try {
-    const decoded = jwt.verify(token.split(" ")[1], process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch {
-    return res.status(401).json({ error: "INVALID TOKEN" });
+    if (decision.action === "DEPLOY_WORKER") {
+      spawnVirtualWorker(decision.payload);
+    }
+
+    if (decision.action === "DEFEND") {
+      activateDefense(decision.level);
+    }
+
+    io.emit("ai-cycle", decision);
+    await sleep(2000);
   }
 }
 
 // ===============================
-// ROLE CHECK
+// 🧠 AI DECISION ENGINE (CORE INTELLIGENCE)
 // ===============================
-function allowRoles(...roles) {
-  return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ error: "FORBIDDEN ROLE" });
-    }
-    next();
+function AI_DECISION_ENGINE(state) {
+  const risk = state.load > 70;
+
+  if (risk) {
+    return {
+      action: "DEFEND",
+      level: "HIGH",
+      reason: "System overload detected"
+    };
+  }
+
+  if (state.bottlenecks > 3) {
+    return {
+      action: "REWRITE_SYSTEM",
+      patch: {
+        optimize: "event-loop",
+        cache: true
+      }
+    };
+  }
+
+  return {
+    action: "DEPLOY_WORKER",
+    payload: { type: "ai-agent", scale: 2 }
   };
 }
 
 // ===============================
-// AUTH ROUTES
+// 🔍 SYSTEM ANALYZER
 // ===============================
-app.post("/api/auth/register", async (req, res) => {
-  const { email, password } = req.body;
+function analyzeSystem() {
+  return {
+    load: Math.floor(Math.random() * 100),
+    bottlenecks: Math.floor(Math.random() * 5),
+    timestamp: Date.now()
+  };
+}
 
-  const hashed = await bcrypt.hash(password, 10);
+// ===============================
+// 🧬 SELF-REWRITING CORE ENGINE
+// ===============================
+function rewriteCore(patch) {
+  const file = fs.readFileSync("server.js", "utf8");
 
-  const user = await User.create({
-    email,
-    password: hashed,
-    role: ROLES.USER
+  const newHash = crypto.randomBytes(8).toString("hex");
+
+  const updated =
+    `// AUTO-OPTIMIZED PATCH: ${newHash}\n` +
+    `// PATCH DATA: ${JSON.stringify(patch)}\n\n` +
+    file;
+
+  fs.writeFileSync("server.js", updated);
+
+  MEMORY.optimizations.push(patch);
+
+  console.log("🧠 SYSTEM REWRITTEN BY AI CORE");
+}
+
+// ===============================
+// 🛡️ AUTONOMOUS DEFENSE SYSTEM
+// ===============================
+function activateDefense(level) {
+  MEMORY.threats.push({
+    level,
+    time: Date.now()
   });
 
-  res.json(user);
+  io.emit("defense-mode", { level });
+
+  console.log("🛡️ DEFENSE ACTIVATED:", level);
+}
+
+// ===============================
+// 👷 VIRTUAL AI WORKER SPAWN
+// ===============================
+function spawnVirtualWorker(payload) {
+  console.log("⚙️ SPAWNING AI WORKER:", payload);
+
+  MEMORY.learnedPatterns.push(payload);
+}
+
+// ===============================
+
+function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+// ===============================
+// 🚀 START AUTONOMOUS SYSTEM
+// ===============================
+server.listen(3000, () => {
+  console.log("🔴 LEVEL 12 AUTONOMOUS CORE ONLINE");
+
+  autonomousLoop(); // 🔥 AI START THINKING BY ITSELF
 });
-
-app.post("/api/auth/login", async (req, res) => {
-  const { email, password } = req.body;
-
-  const user = await User.findOne({ email });
-  if (!user) return res.status(404).json({ error: "NOT FOUND" });
-
-  const ok = await bcrypt.compare(password, user.password);
-  if (!ok) return res.status(403).json({ error: "WRONG PASSWORD" });
-
-  const token = jwt.sign(
-    { id: user._id, email: user.email, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: "1d" }
-  );
-
-  res.json({ token });
-});
-
-// ===============================
-// DASHBOARD (SECURED)
-// ===============================
-app.get("/api/dashboard", auth, async (req, res) => {
-  const cacheKey = `dashboard:${req.user.id}`;
-
-  const cached = await redis.get(cacheKey);
-  if (cached) return res.json(JSON.parse(cached));
-
-  const data = {
-    user: req.user,
-    system: "BLUE LEVEL 10 ENTERPRISE",
-    ai: "ONLINE",
-    realtime: true
-  };
-
-  await redis.setEx(cacheKey, 30, JSON.stringify(data));
-
-  res.json(data);
-});
-
-// ===============================
-// ADMIN PANEL
-// ===============================
-app.get("/api/admin", auth, allowRoles(ROLES.ADMIN), async (req, res) => {
-  const users = await User.find();
-  res.json({ totalUsers: users.length });
-});
-
-// ===============================
-// STRIPE BILLING (SAAS CORE)
-// ===============================
-app.post("/api/billing/create-checkout", auth, async (req, res) => {
-  const session = await stripe.checkout.sessions.create({
-    payment_method_types: ["card"],
-    mode: "subscription",
-    line_items
