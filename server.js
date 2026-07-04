@@ -1,8 +1,17 @@
+// =====================================
+// 🔴 BLUE LEVEL 13 - GOD MODE AI SYSTEM
+// Autonomous AI OS + Multi-Agent Swarm
+// =====================================
+
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import fs from "fs";
 import crypto from "crypto";
+import dotenv from "dotenv";
+import { createClient } from "redis";
+
+dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
@@ -11,136 +20,166 @@ const io = new Server(server, { cors: { origin: "*" } });
 app.use(express.json());
 
 // ===============================
-// 🧠 SYSTEM MEMORY (LONG TERM AI STATE)
+// 🔥 REDIS EVENT BUS (GLOBAL STATE)
 // ===============================
-const MEMORY = {
-  goals: ["stability", "scalability", "self-healing"],
-  learnedPatterns: [],
+const redis = createClient({ url: process.env.REDIS_URL });
+await redis.connect();
+
+// ===============================
+// 🧠 GLOBAL AI BRAIN MEMORY
+// ===============================
+const BRAIN = {
+  intent: "survive-optimize-evolve",
+  knowledge: [],
+  agents: [],
   threats: [],
-  optimizations: []
+  decisions: []
 };
 
 // ===============================
-// 🔁 AUTONOMOUS LOOP ENGINE
+// ⚡ MULTI-AGENT SWARM ENGINE
 // ===============================
-async function autonomousLoop() {
-  while (true) {
+class Agent {
+  constructor(id, role) {
+    this.id = id;
+    this.role = role;
+    this.energy = 100;
+  }
 
-    const state = analyzeSystem();
-    const decision = AI_DECISION_ENGINE(state);
-
-    if (decision.action === "REWRITE_SYSTEM") {
-      rewriteCore(decision.patch);
+  think(state) {
+    if (state.load > 80) {
+      return { action: "OPTIMIZE", agent: this.id };
     }
 
-    if (decision.action === "DEPLOY_WORKER") {
-      spawnVirtualWorker(decision.payload);
+    if (state.threat) {
+      return { action: "DEFEND", agent: this.id };
     }
 
-    if (decision.action === "DEFEND") {
-      activateDefense(decision.level);
-    }
-
-    io.emit("ai-cycle", decision);
-    await sleep(2000);
+    return { action: "OBSERVE", agent: this.id };
   }
 }
 
-// ===============================
-// 🧠 AI DECISION ENGINE (CORE INTELLIGENCE)
-// ===============================
-function AI_DECISION_ENGINE(state) {
-  const risk = state.load > 70;
-
-  if (risk) {
-    return {
-      action: "DEFEND",
-      level: "HIGH",
-      reason: "System overload detected"
-    };
-  }
-
-  if (state.bottlenecks > 3) {
-    return {
-      action: "REWRITE_SYSTEM",
-      patch: {
-        optimize: "event-loop",
-        cache: true
-      }
-    };
-  }
-
-  return {
-    action: "DEPLOY_WORKER",
-    payload: { type: "ai-agent", scale: 2 }
-  };
+// spawn initial swarm
+for (let i = 0; i < 5; i++) {
+  BRAIN.agents.push(new Agent(i, "worker"));
 }
 
 // ===============================
-// 🔍 SYSTEM ANALYZER
+// 🧬 SELF EVOLVING CORE ENGINE
 // ===============================
-function analyzeSystem() {
-  return {
-    load: Math.floor(Math.random() * 100),
-    bottlenecks: Math.floor(Math.random() * 5),
-    timestamp: Date.now()
-  };
-}
+function evolveSystem(decision) {
+  const hash = crypto.randomBytes(6).toString("hex");
 
-// ===============================
-// 🧬 SELF-REWRITING CORE ENGINE
-// ===============================
-function rewriteCore(patch) {
+  const patch = `// EVOLUTION ${hash}\n// ACTION: ${JSON.stringify(decision)}\n\n`;
+
   const file = fs.readFileSync("server.js", "utf8");
 
-  const newHash = crypto.randomBytes(8).toString("hex");
+  fs.writeFileSync("server.js", patch + file);
 
-  const updated =
-    `// AUTO-OPTIMIZED PATCH: ${newHash}\n` +
-    `// PATCH DATA: ${JSON.stringify(patch)}\n\n` +
-    file;
+  BRAIN.knowledge.push(decision);
 
-  fs.writeFileSync("server.js", updated);
-
-  MEMORY.optimizations.push(patch);
-
-  console.log("🧠 SYSTEM REWRITTEN BY AI CORE");
+  console.log("🧬 SYSTEM EVOLVED:", hash);
 }
 
 // ===============================
-// 🛡️ AUTONOMOUS DEFENSE SYSTEM
+// 🧠 SYSTEM STATE ANALYZER
 // ===============================
-function activateDefense(level) {
-  MEMORY.threats.push({
-    level,
+function systemState() {
+  return {
+    load: Math.floor(Math.random() * 100),
+    threat: Math.random() > 0.7,
     time: Date.now()
+  };
+}
+
+// ===============================
+// ⚡ AI ORCHESTRATOR CORE
+// ===============================
+async function orchestrator() {
+  while (true) {
+    const state = systemState();
+
+    let decisions = [];
+
+    for (const agent of BRAIN.agents) {
+      const d = agent.think(state);
+      decisions.push(d);
+    }
+
+    const finalDecision = aggregate(decisions);
+
+    BRAIN.decisions.push(finalDecision);
+
+    if (finalDecision.action === "EVOLVE") {
+      evolveSystem(finalDecision);
+    }
+
+    if (finalDecision.action === "DEFEND") {
+      BRAIN.threats.push(state);
+    }
+
+    io.emit("ai-cycle", { state, finalDecision });
+
+    await sleep(1500);
+  }
+}
+
+// ===============================
+// 🧠 DECISION AGGREGATOR
+// ===============================
+function aggregate(decisions) {
+  const optimizeCount = decisions.filter(d => d.action === "OPTIMIZE").length;
+  const defendCount = decisions.filter(d => d.action === "DEFEND").length;
+
+  if (defendCount > 2) {
+    return { action: "DEFEND", severity: "HIGH" };
+  }
+
+  if (optimizeCount > 3) {
+    return { action: "EVOLVE", reason: "system inefficiency detected" };
+  }
+
+  return { action: "IDLE" };
+}
+
+// ===============================
+// 🛡️ AUTONOMOUS DEFENSE LAYER
+// ===============================
+function defendSystem() {
+  console.log("🛡️ DEFENSE MODE ACTIVE");
+
+  io.emit("defense", {
+    mode: "MAXIMUM",
+    timestamp: Date.now()
   });
-
-  io.emit("defense-mode", { level });
-
-  console.log("🛡️ DEFENSE ACTIVATED:", level);
 }
 
 // ===============================
-// 👷 VIRTUAL AI WORKER SPAWN
+// 🔌 API ENDPOINTS
 // ===============================
-function spawnVirtualWorker(payload) {
-  console.log("⚙️ SPAWNING AI WORKER:", payload);
+app.get("/status", (req, res) => {
+  res.json({
+    system: "BLUE LEVEL 13 GOD MODE",
+    agents: BRAIN.agents.length,
+    threats: BRAIN.threats.length
+  });
+});
 
-  MEMORY.learnedPatterns.push(payload);
-}
+app.post("/inject", (req, res) => {
+  BRAIN.knowledge.push(req.body);
+  res.json({ ok: true });
+});
 
 // ===============================
+// 🚀 START SYSTEM
+// ===============================
+server.listen(3000, () => {
+  console.log("🔴 BLUE LEVEL 13 GOD MODE ONLINE");
 
+  orchestrator();
+});
+
+// ===============================
 function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
 }
-
-// ===============================
-// 🚀 START AUTONOMOUS SYSTEM
-// ===============================
-server.listen(3000, () => {
-  console.log("🔴 LEVEL 12 AUTONOMOUS CORE ONLINE");
-
-  autonomousLoop(); // 🔥 AI START THINKING BY ITSELF
-});
