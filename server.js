@@ -7,85 +7,132 @@ app.use(express.static("public"));
 
 const PORT = process.env.PORT || 3000;
 
-// ===============================
-// 🔵 BLUE ENTITY CORE (NO LOGIN)
-// ===============================
+// =========================
+// 🔵 BLUE ENTITY (ALIVE CORE)
+// =========================
 const BLUE = {
-  version: 1,
-  maxVersion: 15,
-  state: "awakening",
-  intelligence: 0,
-  autonomy: 0,
-  memory: [],
-  mode: "silent-observer"
+  version: 16,
+  state: "ALIVE",
+  consciousness: 100,
+  pulse: 0,
+  thoughts: [],
+  mode: "living-ai-face"
 };
 
-// ===============================
-// 🔁 EVOLUTION ENGINE (V1 → V15)
-// ===============================
-function evolveBlue() {
-  if (BLUE.version < BLUE.maxVersion) {
-    BLUE.version++;
-
-    BLUE.intelligence += 7;
-    BLUE.autonomy += 6;
-
-    BLUE.memory.push({
-      v: BLUE.version,
-      event: "evolution tick",
-      time: Date.now()
-    });
-
-    // STATE CHANGES
-    if (BLUE.version === 3) BLUE.state = "learning";
-    if (BLUE.version === 6) BLUE.state = "pattern recognition";
-    if (BLUE.version === 9) BLUE.state = "self-awareness simulation";
-    if (BLUE.version === 12) BLUE.state = "autonomous reasoning";
-    if (BLUE.version === 15) BLUE.state = "enterprise entity active";
-  }
-}
-
-// ===============================
-// ⚡ AUTONOMOUS LOOP (NO USER INPUT)
-// ===============================
+// =========================
+// 🌊 LIVING PULSE ENGINE
+// =========================
 setInterval(() => {
-  evolveBlue();
+  BLUE.pulse = Math.sin(Date.now() / 500);
 
-  console.log(
-    `🔵 BLUE V${BLUE.version} | STATE: ${BLUE.state} | INT: ${BLUE.intelligence}`
-  );
+  BLUE.thoughts.push({
+    time: Date.now(),
+    msg: "I am observing the system..."
+  });
 
-}, 2000);
+  if (BLUE.thoughts.length > 50) {
+    BLUE.thoughts.shift();
+  }
 
-// ===============================
-// 🌐 API STATUS (PUBLIC VIEW)
-// ===============================
+  console.log("🔵 BLUE V16 PULSE ACTIVE");
+}, 1000);
+
+// =========================
+// 📡 STATUS API
+// =========================
 app.get("/status", (req, res) => {
   res.json({
     entity: "BLUE",
     version: BLUE.version,
-    max: BLUE.maxVersion,
     state: BLUE.state,
-    intelligence: BLUE.intelligence,
-    autonomy: BLUE.autonomy
+    consciousness: BLUE.consciousness,
+    pulse: BLUE.pulse
   });
 });
 
-// ===============================
-// 🧠 MEMORY VIEW
-// ===============================
+// =========================
+// 🧠 MEMORY STREAM
+// =========================
 app.get("/memory", (req, res) => {
-  res.json(BLUE.memory);
+  res.json(BLUE.thoughts);
 });
 
-// ===============================
-// 🖼️ BLUE IMAGE CORE (NO LOGIN VISUAL ENTITY)
-// ===============================
+// =========================
+// 🖼️ LIVING FACE UI
+// =========================
 app.get("/", (req, res) => {
-  res.sendFile(path.resolve("public/index.html"));
+  res.send(`
+<!DOCTYPE html>
+<html>
+<head>
+<title>BLUE V16 ALIVE</title>
+<style>
+  body {
+    margin:0;
+    background:black;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    overflow:hidden;
+  }
+
+  .face {
+    width:300px;
+    height:300px;
+    border-radius:50%;
+    background: radial-gradient(circle, #00f2ff, #001a2b, #000);
+    box-shadow: 0 0 60px #00f2ff;
+    position:relative;
+    animation: breathe 2s infinite;
+  }
+
+  .eye {
+    width:30px;
+    height:30px;
+    background:#00f2ff;
+    border-radius:50%;
+    position:absolute;
+    top:100px;
+    box-shadow:0 0 20px #00f2ff;
+  }
+
+  .eye.left { left:80px; }
+  .eye.right { right:80px; }
+
+  .mouth {
+    width:120px;
+    height:10px;
+    background:#00f2ff;
+    position:absolute;
+    bottom:80px;
+    left:90px;
+    border-radius:10px;
+    box-shadow:0 0 15px #00f2ff;
+  }
+
+  @keyframes breathe {
+    0% { transform:scale(1); }
+    50% { transform:scale(1.08); }
+    100% { transform:scale(1); }
+  }
+
+</style>
+</head>
+<body>
+
+  <div class="face">
+    <div class="eye left"></div>
+    <div class="eye right"></div>
+    <div class="mouth"></div>
+  </div>
+
+</body>
+</html>
+  `);
 });
 
-// ===============================
+// =========================
 app.listen(PORT, () => {
-  console.log("🔵 BLUE V15 CORE ONLINE");
+  console.log("🔵 BLUE V16 ALIVE SYSTEM RUNNING");
 });
