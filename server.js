@@ -12,7 +12,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 /* =========================
-   MONGODB
+   MONGODB CONNECT
 ========================= */
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log("✅ MongoDB Connected"))
@@ -24,7 +24,8 @@ mongoose.connect(process.env.MONGODB_URI)
 const userSchema = new mongoose.Schema({
   username: String,
   password: String,
-  role: { type: String, default: "user" }
+  role: { type: String, default: "user" },
+  createdAt: { type: Date, default: Date.now }
 });
 
 const User = mongoose.model("User", userSchema);
@@ -33,123 +34,90 @@ const User = mongoose.model("User", userSchema);
    JWT AUTH MIDDLEWARE
 ========================= */
 function auth(req, res, next) {
-  const token = req.headers.authorization;
+  const token = req.query.token;
 
-  if (!token) return res.status(401).send("No token");
+  if (!token) return res.redirect("/");
 
   try {
-    const verified = jwt.verify(token.split(" ")[1], process.env.JWT_SECRET);
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
     req.user = verified;
     next();
   } catch (err) {
-    res.status(401).send("Invalid token");
+    return res.redirect("/");
   }
 }
 
 /* =========================
-   HOME
+   HOME (SAAS LANDING + LOGIN)
 ========================= */
 app.get("/", (req, res) => {
   res.send(`
-    <h1>💙 BLUE v7.3</h1>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLUE v8 SaaS</title>
 
-    <form method="POST" action="/register">
-      <input name="username" placeholder="Username" required />
-      <input name="password" type="password" required />
-      <button>Register</button>
-    </form>
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:radial-gradient(circle at top,#0f172a,#020617);
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
 
-    <form method="POST" action="/login">
-      <input name="username" placeholder="Username" required />
-      <input name="password" type="password" required />
-      <button>Login</button>
-    </form>
-  `);
-});
+.card{
+background:rgba(17,24,39,0.9);
+padding:45px;
+border-radius:22px;
+width:90%;
+max-width:420px;
+text-align:center;
+box-shadow:0 0 60px rgba(59,130,246,0.25);
+}
 
-/* =========================
-   REGISTER
-========================= */
-app.post("/register", async (req, res) => {
-  const { username, password } = req.body;
+h1{
+color:#60a5fa;
+margin-bottom:5px;
+}
 
-  const exist = await User.findOne({ username });
-  if (exist) return res.send("User exists");
+p{
+color:#94a3b8;
+font-size:13px;
+}
 
-  const hash = await bcrypt.hash(password, 10);
+input{
+width:92%;
+padding:12px;
+margin:8px 0;
+border:none;
+border-radius:10px;
+outline:none;
+background:#0f172a;
+color:white;
+}
 
-  await User.create({
-    username,
-    password: hash,
-    role: "user"
-  });
+button{
+width:95%;
+padding:12px;
+margin-top:10px;
+border:none;
+border-radius:10px;
+background:linear-gradient(90deg,#2563eb,#3b82f6);
+color:white;
+font-weight:bold;
+cursor:pointer;
+}
 
-  res.send("User Registered");
-});
+button:hover{
+transform:scale(1.02);
+}
 
-/* =========================
-   LOGIN (JWT)
-========================= */
-app.post("/login", async (req, res) => {
-  const { username, password } = req.body;
-
-  const user = await User.findOne({ username });
-  if (!user) return res.send("User not found");
-
-  const match = await bcrypt.compare(password, user.password);
-  if (!match) return res.send("Wrong password");
-
-  const token = jwt.sign(
-    { id: user._id, username: user.username, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: "1h" }
-  );
-
-  res.json({
-    message: "Login success",
-    token
-  });
-});
-
-/* =========================
-   DASHBOARD (PROTECTED)
-========================= */
-app.get("/dashboard", auth, (req, res) => {
-  res.send(`
-    <h1>💙 DASHBOARD</h1>
-    <p>User: ${req.user.username}</p>
-    <p>Role: ${req.user.role}</p>
-  `);
-});
-
-/* =========================
-   ADMIN ROUTE (ROLE BASED)
-========================= */
-app.get("/admin", auth, (req, res) => {
-  if (req.user.role !== "admin") {
-    return res.send("Access denied");
-  }
-
-  res.send("💙 Admin Panel");
-});
-
-/* =========================
-   STATUS
-========================= */
-app.get("/status", (req, res) => {
-  res.json({
-    project: "BLUE",
-    version: "7.3",
-    status: "LIVE",
-    auth: "JWT ACTIVE"
-  });
-});
-
-/* =========================
-   SERVER
-========================= */
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log("BLUE v7.3 running on " + PORT);
-});
+.small{
+font-size:11px;
+color:#64748b;
