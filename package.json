@@ -1,6 +1,6 @@
 {
-  "name": "blue-v11",
-  "version": "11.0.0",
+  "name": "blue-v12",
+  "version": "12.0.0",
   "dependencies": {
     "express": "^4.19.2"
   }
