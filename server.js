@@ -12,18 +12,18 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 /* =========================
-   MONGODB CONNECT
+   DB CONNECT
 ========================= */
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log("✅ MongoDB Connected"))
-  .catch(err => console.log("❌ Mongo Error:", err.message));
+  .catch(err => console.log("❌ MongoDB Error:", err.message));
 
 /* =========================
-   USER MODEL
+   USER SCHEMA
 ========================= */
 const userSchema = new mongoose.Schema({
-  username: String,
-  password: String,
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
   role: { type: String, default: "user" },
   createdAt: { type: Date, default: Date.now }
 });
@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model("User", userSchema);
 
 /* =========================
-   JWT AUTH MIDDLEWARE
+   AUTH MIDDLEWARE
 ========================= */
 function auth(req, res, next) {
   const token = req.query.token;
@@ -48,7 +48,7 @@ function auth(req, res, next) {
 }
 
 /* =========================
-   HOME (SAAS LANDING + LOGIN)
+   HOME PAGE (SAAS UI)
 ========================= */
 app.get("/", (req, res) => {
   res.send(`
@@ -72,8 +72,8 @@ height:100vh;
 }
 
 .card{
-background:rgba(17,24,39,0.9);
-padding:45px;
+background:rgba(17,24,39,0.95);
+padding:40px;
 border-radius:22px;
 width:90%;
 max-width:420px;
@@ -81,15 +81,7 @@ text-align:center;
 box-shadow:0 0 60px rgba(59,130,246,0.25);
 }
 
-h1{
-color:#60a5fa;
-margin-bottom:5px;
-}
-
-p{
-color:#94a3b8;
-font-size:13px;
-}
+h1{ color:#60a5fa; }
 
 input{
 width:92%;
@@ -118,6 +110,182 @@ button:hover{
 transform:scale(1.02);
 }
 
-.small{
-font-size:11px;
+small{
 color:#64748b;
+font-size:11px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+<h1>💙 BLUE v8 SAAS</h1>
+
+<form method="POST" action="/register">
+<input name="username" placeholder="Username" required />
+<input name="password" type="password" placeholder="Password" required />
+<button>Register</button>
+</form>
+
+<form method="POST" action="/login">
+<input name="username" placeholder="Username" required />
+<input name="password" type="password" required />
+<button>Login</button>
+</form>
+
+<small>MongoDB + JWT + SaaS Core</small>
+</div>
+
+</body>
+</html>
+  `);
+});
+
+/* =========================
+   REGISTER
+========================= */
+app.post("/register", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    const exist = await User.findOne({ username });
+    if (exist) return res.send("❌ User already exists");
+
+    const hash = await bcrypt.hash(password, 10);
+
+    await User.create({
+      username,
+      password: hash
+    });
+
+    res.redirect("/");
+
+  } catch (err) {
+    res.send("❌ Register Error");
+  }
+});
+
+/* =========================
+   LOGIN
+========================= */
+app.post("/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    const user = await User.findOne({ username });
+    if (!user) return res.send("❌ User not found");
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) return res.send("❌ Wrong password");
+
+    const token = jwt.sign(
+      {
+        id: user._id,
+        username: user.username,
+        role: user.role
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "2h" }
+    );
+
+    res.redirect(`/dashboard?token=${token}`);
+
+  } catch (err) {
+    res.send("❌ Login Error");
+  }
+});
+
+/* =========================
+   DASHBOARD (PROTECTED SAAS UI)
+========================= */
+app.get("/dashboard", auth, (req, res) => {
+  res.send(`
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard</title>
+
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:#0f172a;
+color:white;
+}
+
+nav{
+display:flex;
+justify-content:space-between;
+padding:15px 20px;
+background:rgba(17,24,39,0.95);
+}
+
+.container{
+padding:40px;
+text-align:center;
+}
+
+.card{
+background:rgba(17,24,39,0.95);
+padding:35px;
+border-radius:18px;
+display:inline-block;
+box-shadow:0 0 50px rgba(59,130,246,0.25);
+}
+
+.badge{
+display:inline-block;
+margin-top:10px;
+padding:6px 14px;
+border-radius:20px;
+background:linear-gradient(90deg,#16a34a,#22c55e);
+font-size:12px;
+}
+</style>
+
+</head>
+
+<body>
+
+<nav>
+<div>💙 BLUE v8 SAAS</div>
+<div><a href="/" style="color:#94a3b8;text-decoration:none;">Logout</a></div>
+</nav>
+
+<div class="container">
+<div class="card">
+<h1>Welcome ${req.user.username}</h1>
+<p>Role: ${req.user.role}</p>
+<div class="badge">ACTIVE SESSION</div>
+</div>
+</div>
+
+</body>
+</html>
+  `);
+});
+
+/* =========================
+   STATUS API
+========================= */
+app.get("/status", (req, res) => {
+  res.json({
+    project: "BLUE",
+    version: "8.0",
+    status: "LIVE",
+    type: "SAAS PRODUCTION"
+  });
+});
+
+/* =========================
+   SERVER START
+========================= */
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log("BLUE v8 SAAS running on " + PORT);
+});
