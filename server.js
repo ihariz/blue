@@ -1,3 +1,7 @@
+const express = require("express");
+const app = express();
+
+/* HOME */
 app.get("/", (req, res) => {
   res.send(`
 <!DOCTYPE html>
@@ -68,4 +72,20 @@ color:#94a3b8;
 </body>
 </html>
   `);
+});
+
+/* STATUS */
+app.get("/status", (req, res) => {
+  res.json({
+    project: "BLUE",
+    status: "LIVE",
+    level: "lovely"
+  });
+});
+
+/* SERVER */
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log("BLUE running on " + PORT);
 });
