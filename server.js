@@ -1,106 +1,91 @@
 import express from "express";
-import mongoose from "mongoose";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
-import dotenv from "dotenv";
-
-dotenv.config();
+import path from "path";
 
 const app = express();
 app.use(express.json());
+app.use(express.static("public"));
 
 const PORT = process.env.PORT || 3000;
 
-// =========================
-// DATABASE
-// =========================
-mongoose.connect(process.env.MONGO_URL)
-  .then(() => console.log("MongoDB CONNECTED"));
+// ===============================
+// 🔵 BLUE ENTITY CORE (NO LOGIN)
+// ===============================
+const BLUE = {
+  version: 1,
+  maxVersion: 15,
+  state: "awakening",
+  intelligence: 0,
+  autonomy: 0,
+  memory: [],
+  mode: "silent-observer"
+};
 
-// =========================
-// USER MODEL
-// =========================
-const User = mongoose.model("User", {
-  email: String,
-  password: String
-});
+// ===============================
+// 🔁 EVOLUTION ENGINE (V1 → V15)
+// ===============================
+function evolveBlue() {
+  if (BLUE.version < BLUE.maxVersion) {
+    BLUE.version++;
 
-// =========================
-// AUTH MIDDLEWARE
-// =========================
-function auth(req,res,next){
-  try{
-    const token = req.headers.authorization.split(" ")[1];
-    req.user = jwt.verify(token, process.env.JWT_SECRET);
-    next();
-  }catch{
-    res.status(401).json({ error:"NO ACCESS" });
+    BLUE.intelligence += 7;
+    BLUE.autonomy += 6;
+
+    BLUE.memory.push({
+      v: BLUE.version,
+      event: "evolution tick",
+      time: Date.now()
+    });
+
+    // STATE CHANGES
+    if (BLUE.version === 3) BLUE.state = "learning";
+    if (BLUE.version === 6) BLUE.state = "pattern recognition";
+    if (BLUE.version === 9) BLUE.state = "self-awareness simulation";
+    if (BLUE.version === 12) BLUE.state = "autonomous reasoning";
+    if (BLUE.version === 15) BLUE.state = "enterprise entity active";
   }
 }
 
-// =========================
-// REGISTER
-// =========================
-app.post("/register", async (req,res)=>{
-  const hash = await bcrypt.hash(req.body.password,10);
+// ===============================
+// ⚡ AUTONOMOUS LOOP (NO USER INPUT)
+// ===============================
+setInterval(() => {
+  evolveBlue();
 
-  const user = await User.create({
-    email:req.body.email,
-    password:hash
-  });
-
-  res.json({ status:"REGISTERED", user });
-});
-
-// =========================
-// LOGIN
-// =========================
-app.post("/login", async (req,res)=>{
-  const user = await User.findOne({ email:req.body.email });
-
-  if(!user) return res.status(404).json({ error:"NOT FOUND" });
-
-  const ok = await bcrypt.compare(req.body.password, user.password);
-
-  if(!ok) return res.status(403).json({ error:"WRONG PASSWORD" });
-
-  const token = jwt.sign(
-    { id:user._id, email:user.email },
-    process.env.JWT_SECRET,
-    { expiresIn:"1d" }
+  console.log(
+    `🔵 BLUE V${BLUE.version} | STATE: ${BLUE.state} | INT: ${BLUE.intelligence}`
   );
 
-  res.json({ token });
-});
+}, 2000);
 
-// =========================
-// DASHBOARD (WINNING CORE)
-// =========================
-app.get("/dashboard", auth, async (req,res)=>{
-  const user = await User.findById(req.user.id);
-
+// ===============================
+// 🌐 API STATUS (PUBLIC VIEW)
+// ===============================
+app.get("/status", (req, res) => {
   res.json({
-    system:"🔵 BLUE MAX CORE WINNING",
-    user:user.email,
-    status:"ACTIVE",
-    level:"V10 FINAL"
+    entity: "BLUE",
+    version: BLUE.version,
+    max: BLUE.maxVersion,
+    state: BLUE.state,
+    intelligence: BLUE.intelligence,
+    autonomy: BLUE.autonomy
   });
 });
 
-// =========================
-// AI ENDPOINT (SIMPLE BUT POWERFUL)
-// =========================
-app.post("/ai", auth, (req,res)=>{
-  const input = req.body.text;
-
-  res.json({
-    input,
-    output:`BLUE AI processed: ${input}`,
-    confidence:0.92
-  });
+// ===============================
+// 🧠 MEMORY VIEW
+// ===============================
+app.get("/memory", (req, res) => {
+  res.json(BLUE.memory);
 });
 
-// =========================
-app.listen(PORT, ()=>{
-  console.log("🔵 BLUE MAX CORE RUNNING ON", PORT);
+// ===============================
+// 🖼️ BLUE IMAGE CORE (NO LOGIN VISUAL ENTITY)
+// ===============================
+app.get("/", (req, res) => {
+  res.sendFile(path.resolve("public/index.html"));
+});
+
+// ===============================
+app.listen(PORT, () => {
+  console.log("🔵 BLUE V15 CORE ONLINE");
 });
