@@ -1,17 +1,17 @@
 import express from "express";
-import http from "http";
-import { Server } from "socket.io";
+import mongoose from "mongoose";
+import redis from "redis";
 
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server);
+app.use(express.json());
 
-app.get("/", (req,res)=>{
-  res.send("BLUE V9 AI CORE");
+mongoose.connect("mongodb://localhost/blue");
+
+const client = redis.createClient();
+await client.connect();
+
+app.get("/status", async (req,res)=>{
+  res.json({ system:"V10 ENTERPRISE READY" });
 });
 
-io.on("connection",(socket)=>{
-  socket.emit("status",{ai:"online"});
-});
-
-server.listen(3000);
+app.listen(3000);
