@@ -1,7 +1,7 @@
 {
-  "name": "blue-v4-ai-brain",
-  "version": "4.1.0",
-  "description": "BLUE V4 Real AI Brain SaaS (GPT + Memory + Auth)",
+  "name": "blue-v6-ai-os",
+  "version": "6.0.0",
+  "description": "BLUE V6 Autonomous AI SaaS OS (GPT Brain + Memory + Multi-user)",
   "main": "server.js",
   "type": "module",
   "scripts": {
