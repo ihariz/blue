@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import OpenAI from "openai";
 
 dotenv.config();
 
@@ -12,14 +13,21 @@ app.use(cors());
 app.use(express.json());
 
 /* =========================
-   DATABASE CONNECT
+   OPENAI CLIENT (REAL BRAIN)
+========================= */
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+/* =========================
+   DATABASE
 ========================= */
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("BLUE DB CONNECTED"))
-  .catch(err => console.log("DB ERROR:", err));
+  .catch(err => console.log(err));
 
 /* =========================
-   USER SCHEMA
+   USER MODEL
 ========================= */
 const UserSchema = new mongoose.Schema({
   email: { type: String, unique: true },
@@ -30,7 +38,7 @@ const UserSchema = new mongoose.Schema({
 const User = mongoose.model("blue_users", UserSchema);
 
 /* =========================
-   MEMORY SCHEMA
+   MEMORY MODEL
 ========================= */
 const MemorySchema = new mongoose.Schema({
   userId: String,
@@ -66,10 +74,7 @@ app.post("/api/register", async (req, res) => {
 
   const hashed = await bcrypt.hash(password, 10);
 
-  const user = await User.create({
-    email,
-    password: hashed
-  });
+  const user = await User.create({ email, password: hashed });
 
   res.json({ message: "USER CREATED", userId: user._id });
 });
@@ -95,28 +100,51 @@ app.post("/api/login", async (req, res) => {
 });
 
 /* =========================
-   BLUE BRAIN (AI CORE LOGIC)
+   🧠 REAL AI BRAIN (GPT CORE)
 ========================= */
 app.post("/api/brain", auth, async (req, res) => {
   const { input } = req.body;
 
-  const output = `BLUE processed: ${input}`;
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are BLUE V4 AI CORE. You are precise, technical, and autonomous."
+        },
+        {
+          role: "user",
+          content: input
+        }
+      ]
+    });
 
-  await Memory.create({
-    userId: req.user.id,
-    input,
-    output
-  });
+    const output = response.choices[0].message.content;
 
-  res.json({
-    system: "BLUE V4",
-    input,
-    output
-  });
+    // Save to memory
+    await Memory.create({
+      userId: req.user.id,
+      input,
+      output
+    });
+
+    res.json({
+      system: "BLUE V4 REAL AI BRAIN",
+      input,
+      output
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      error: "AI BRAIN ERROR",
+      details: err.message
+    });
+  }
 });
 
 /* =========================
-   MEMORY RECALL
+   MEMORY
 ========================= */
 app.get("/api/memory", auth, async (req, res) => {
   const data = await Memory.find({ userId: req.user.id })
@@ -130,22 +158,23 @@ app.get("/api/memory", auth, async (req, res) => {
 });
 
 /* =========================
-   STATUS CHECK
+   STATUS
 ========================= */
 app.get("/api/status", (req, res) => {
   res.json({
-    system: "BLUE V4 SAAS CORE",
-    status: "ONLINE",
-    modules: ["AUTH", "MEMORY", "BRAIN"],
-    time: new Date().toISOString()
+    system: "BLUE V4 AI BRAIN ONLINE",
+    status: "ACTIVE",
+    brain: "GPT-4o-mini",
+    memory: "MONGO_DB",
+    auth: "JWT_SECURED"
   });
 });
 
 /* =========================
-   START SERVER
+   START
 ========================= */
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`BLUE V4 RUNNING ON PORT ${PORT}`);
+  console.log(`BLUE V4 AI BRAIN RUNNING ON PORT ${PORT}`);
 });
