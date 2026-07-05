@@ -10,39 +10,28 @@ dotenv.config();
 const app = express();
 
 /* =========================
-   FIX FOR RENDER / PROXY
+   RENDER SAFE CONFIG
 ========================= */
-app.set("trust proxy", 1);
-
-app.use(cors({
-  origin: "*"
-}));
-
+app.use(cors());
 app.use(express.json());
 
 /* =========================
-   OPENAI GPT BRAIN
+   OPENAI GPT BRAIN (REAL)
 ========================= */
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
 /* =========================
-   DATABASE CONNECT
+   DB CONNECT
 ========================= */
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("BLUE V6 DB CONNECTED"))
-  .catch(err => console.log("DB ERROR:", err));
+  .then(() => console.log("BLUE V6 FIXED DB CONNECTED"))
+  .catch(err => console.log(err));
 
 /* =========================
-   MODELS
+   MEMORY SYSTEM
 ========================= */
-const UserSchema = new mongoose.Schema({
-  email: String,
-  password: String,
-  createdAt: { type: Date, default: Date.now }
-});
-
 const MemorySchema = new mongoose.Schema({
   userId: String,
   input: String,
@@ -50,43 +39,45 @@ const MemorySchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-const User = mongoose.model("blue_users", UserSchema);
 const Memory = mongoose.model("blue_memory", MemorySchema);
 
 /* =========================
-   AUTH MIDDLEWARE
+   AUTH (SIMPLE SAFE)
 ========================= */
 const auth = (req, res, next) => {
   const token = req.headers.authorization;
 
-  if (!token) {
-    return res.status(401).json({ error: "NO TOKEN" });
-  }
+  if (!token) return res.status(401).json({ error: "NO TOKEN" });
 
   try {
     req.user = jwt.verify(token, process.env.JWT_SECRET);
     next();
   } catch {
-    return res.status(401).json({ error: "INVALID TOKEN" });
+    res.status(401).json({ error: "INVALID TOKEN" });
   }
 };
 
 /* =========================
-   HEALTH CHECK (RENDER)
+   ROOT CHECK
 ========================= */
 app.get("/", (req, res) => {
   res.json({
-    system: "BLUE V6 LIVE",
-    status: "RUNNING",
+    system: "BLUE V6 FIXED",
+    status: "LIVE",
+    brain: "GPT ACTIVE",
     time: new Date().toISOString()
   });
 });
 
 /* =========================
-   🧠 REAL AI BRAIN
+   🧠 REAL GPT BRAIN (FIXED)
 ========================= */
 app.post("/api/brain", auth, async (req, res) => {
   const { input } = req.body;
+
+  if (!input) {
+    return res.status(400).json({ error: "NO INPUT PROVIDED" });
+  }
 
   try {
     const ai = await openai.chat.completions.create({
@@ -94,7 +85,7 @@ app.post("/api/brain", auth, async (req, res) => {
       messages: [
         {
           role: "system",
-          content: "You are BLUE V6 AI OS. Be precise, structured, and intelligent."
+          content: "You are BLUE V6 AI BRAIN. You are precise, structured, and helpful."
         },
         {
           role: "user",
@@ -112,21 +103,21 @@ app.post("/api/brain", auth, async (req, res) => {
     });
 
     res.json({
-      system: "BLUE V6",
+      system: "BLUE V6 FIXED",
       input,
       output
     });
 
   } catch (err) {
     res.status(500).json({
-      error: "AI ERROR",
+      error: "GPT BRAIN ERROR",
       message: err.message
     });
   }
 });
 
 /* =========================
-   MEMORY SYSTEM
+   MEMORY RECALL
 ========================= */
 app.get("/api/memory", auth, async (req, res) => {
   const data = await Memory.find({ userId: req.user.id })
@@ -134,20 +125,21 @@ app.get("/api/memory", auth, async (req, res) => {
     .limit(50);
 
   res.json({
+    system: "BLUE MEMORY",
     count: data.length,
     memory: data
   });
 });
 
 /* =========================
-   STATUS
+   STATUS CHECK (IMPORTANT FIX)
 ========================= */
 app.get("/api/status", (req, res) => {
   res.json({
-    system: "BLUE V6",
-    status: "ONLINE",
-    brain: "GPT-4o-mini",
-    memory: "ACTIVE",
+    system: "BLUE V6 FIXED",
+    version: "6.0.1",
+    brain: "GPT-4o-mini ACTIVE",
+    memory: "ONLINE",
     deploy: "RENDER READY"
   });
 });
@@ -158,5 +150,5 @@ app.get("/api/status", (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`BLUE V6 RUNNING ON PORT ${PORT}`);
+  console.log(`BLUE V6 FIXED RUNNING ON PORT ${PORT}`);
 });
