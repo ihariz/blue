@@ -1,84 +1,90 @@
 import express from "express";
 import cors from "cors";
-import { WebSocketServer } from "ws";
-
-import { runAI } from "./ai/engine.js";
-import { memory } from "./memory/store.js";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static("public"));
 
 /**
- * HEALTH CHECK
+ * SYSTEM STATUS
  */
-app.get("/health", (req, res) => {
+app.get("/", (req, res) => {
   res.json({
-    system: "BLUE SAAS v28",
+    system: "BLUE v30",
     status: "online",
-    uptime: process.uptime()
+    layer: "memory + language ai core"
   });
 });
 
 /**
- * MAIN AI ENDPOINT
+ * ADVANCED MEMORY STORE (USER CONTEXT MEMORY)
  */
-app.post("/api/ai", async (req, res) => {
-  try {
-    const input = req.body?.input;
-
-    if (!input || typeof input !== "string") {
-      return res.status(400).json({
-        error: "invalid input"
-      });
-    }
-
-    const result = await runAI(input);
-
-    memory.add({
-      input,
-      result,
-      time: Date.now()
-    });
-
-    broadcast({
-      type: "ai_result",
-      data: result
-    });
-
-    res.json({
-      input,
-      result
-    });
-  } catch (err) {
-    res.status(500).json({
-      error: err.message
-    });
-  }
-});
+const memoryDB = new Map();
 
 /**
- * MEMORY ENDPOINT
+ * LANGUAGE ENGINE v8 (COGNITIVE LAYER)
  */
-app.get("/api/history", (req, res) => {
-  res.json(memory.getAll());
-});
+function languageV8(input, memory) {
+  const context = memory.slice(-5);
 
-const server = app.listen(process.env.PORT || 4000, () => {
-  console.log("BLUE SAAS v28 running");
-});
-
-/**
- * WEBSOCKET SERVER
- */
-const wss = new WebSocketServer({ server });
-
-function broadcast(message) {
-  wss.clients.forEach((client) => {
-    if (client.readyState === 1) {
-      client.send(JSON.stringify(message));
-    }
-  });
+  return {
+    intent: detectIntent(input),
+    sentiment: detectSentiment(input),
+    contextUsed: context,
+    languageGraph: buildLanguageGraph(input),
+    responseStyle: adaptStyle(context)
+  };
 }
+
+/**
+ * INTENT DETECTION
+ */
+function detectIntent(input) {
+  if (input.includes("deploy")) return "DEPLOY";
+  if (input.includes("scale")) return "SCALE";
+  if (input.includes("learn")) return "LEARN";
+  if (input.includes("memory")) return "MEMORY_QUERY";
+  return "CHAT";
+}
+
+/**
+ * SIMPLE SENTIMENT LAYER
+ */
+function detectSentiment(input) {
+  if (input.includes("error")) return "negative";
+  if (input.includes("good")) return "positive";
+  return "neutral";
+}
+
+/**
+ * LANGUAGE GRAPH (STRUCTURED THINKING)
+ */
+function buildLanguageGraph(input) {
+  return input.split(" ").map((word, i) => ({
+    node: word,
+    index: i,
+    link: input.split(" ").filter(w => w !== word)
+  }));
+}
+
+/**
+ * ADAPTIVE STYLE BASED ON MEMORY
+ */
+function adaptStyle(memory) {
+  if (memory.length > 10) return "advanced-user";
+  if (memory.length > 3) return "intermediate-user";
+  return "new-user";
+}
+
+/**
+ * CORE AI ENGINE
+ */
+function runAI(input, userId = "guest") {
+  const userMemory = memoryDB.get(userId) || [];
+
+  const lang = languageV8(input, userMemory);
+
+  const output = processIntent(lang.intent, input);
+
+  const updatedMemory =
