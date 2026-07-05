@@ -1,7 +1,7 @@
 {
-  "name": "blue-v6-ai-os",
-  "version": "6.0.0",
-  "description": "BLUE V6 AI OS - GPT Brain + Memory + SaaS Core",
+  "name": "blue-v6-fixed-ai",
+  "version": "6.0.1",
+  "description": "BLUE V6 FIXED - Real GPT Brain + Memory + SaaS Core",
   "main": "server.js",
   "type": "module",
   "scripts": {
