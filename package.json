@@ -1,7 +1,6 @@
 {
-  "name": "blue-v27",
-  "version": "27.0.0",
-  "description": "BLUE v27 Autonomous AI Cloud Core",
+  "name": "blue-saas-ai-dashboard",
+  "version": "28.0.0",
   "main": "server.js",
   "type": "module",
   "scripts": {
@@ -9,9 +8,7 @@
   },
   "dependencies": {
     "express": "^4.19.2",
-    "cors": "^2.8.5"
-  },
-  "engines": {
-    "node": ">=18"
+    "cors": "^2.8.5",
+    "ws": "^8.18.0"
   }
 }
