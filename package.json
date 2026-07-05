@@ -1,18 +1,35 @@
 {
-  "name": "blue-v27-ai-cloud",
+  "name": "blue-v27-autonomous-ai-cloud",
   "version": "27.0.0",
-  "description": "BLUE v27 Autonomous AI Cloud System",
+  "description": "BLUE v27 Autonomous AI Cloud System with Cognitive Language Layer",
   "main": "server.js",
   "type": "module",
+
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "clean": "rm -rf node_modules",
+    "reinstall": "npm install"
   },
+
   "dependencies": {
     "express": "^4.19.2",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5"
   },
+
   "engines": {
     "node": ">=18"
-  }
+  },
+
+  "keywords": [
+    "ai",
+    "autonomous",
+    "cloud",
+    "mesh",
+    "blue-system",
+    "cognitive-ai"
+  ],
+
+  "license": "MIT"
 }
