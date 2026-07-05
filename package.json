@@ -1,8 +1,7 @@
 {
-  "name": "blue-v6-safe",
-  "version": "6.0.2",
+  "name": "blue-v6-light",
+  "version": "6.0.3",
   "type": "module",
-  "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
