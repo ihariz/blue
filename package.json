@@ -1,6 +1,6 @@
 {
-  "name": "blue-v8-saas-os",
-  "version": "8.0.0",
+  "name": "blue-saas-os-plus",
+  "version": "8.1.0",
   "type": "module",
   "main": "server.js",
   "scripts": {
@@ -13,6 +13,12 @@
     "mongoose": "^8.0.0",
     "openai": "^4.0.0",
     "jsonwebtoken": "^9.0.2",
-    "bcryptjs": "^2.4.3"
+    "bcryptjs": "^2.4.3",
+
+    "helmet": "^7.1.0",
+    "compression": "^1.7.4",
+    "morgan": "^1.10.0",
+    "express-rate-limit": "^7.2.0",
+    "uuid": "^9.0.1"
   }
 }
