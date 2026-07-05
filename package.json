@@ -1,7 +1,7 @@
 {
-  "name": "blue-v30-ai-memory-language",
-  "version": "30.0.0",
-  "description": "BLUE v30 AI SaaS with Memory + Language System",
+  "name": "blue-v31-saas-ai",
+  "version": "31.0.0",
+  "description": "BLUE v31 SaaS AI Platform Upgrade",
   "main": "server.js",
   "type": "module",
 
@@ -11,20 +11,11 @@
 
   "dependencies": {
     "express": "^4.19.2",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "ws": "^8.18.0"
   },
 
   "engines": {
     "node": ">=18"
-  },
-
-  "keywords": [
-    "ai",
-    "memory",
-    "language-model",
-    "saas",
-    "blue-system"
-  ],
-
-  "license": "MIT"
+  }
 }
