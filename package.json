@@ -1,6 +1,6 @@
 {
-  "name": "blue-v6-production",
-  "version": "6.0.1",
+  "name": "blue-v6-saas",
+  "version": "6.1.0",
   "type": "module",
   "main": "server.js",
   "scripts": {
