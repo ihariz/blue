@@ -1,154 +1,88 @@
-import express from "express";
-import cors from "cors";
-import { WebSocketServer } from "ws";
+const express = require("express");
+const path = require("path");
+const fs = require("fs");
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// ===== BLUE CORE STATE =====
+const BLUE = {
+  name: "BLUE",
+  version: "v16.0",
+  status: "ACTIVE",
+  timeLayer: "UTC+14",
+  languages: ["en", "ms", "zh", "ar", "ja", "ko", "fr", "de", "es"],
+  memory: {
+    shortTerm: [],
+    longTerm: []
+  }
+};
+
+// ===== MIDDLEWARE =====
 app.use(express.json());
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 
-/**
- * =========================
- * MEMORY SYSTEM (SIMPLE SAAS CORE)
- * =========================
- */
-const memoryDB = new Map();
-
-/**
- * =========================
- * LANGUAGE ENGINE v9 (CLEAN COGNITIVE LAYER)
- * =========================
- */
-function languageV9(input, memory) {
-  return {
-    intent: detectIntent(input),
-    contextLevel: memory.length,
-    tokens: tokenize(input),
-    risk: input.length > 200 ? "high" : "low"
-  };
-}
-
-function tokenize(input) {
-  return input.split(" ").map((t, i) => ({
-    token: t,
-    index: i
-  }));
-}
-
-function detectIntent(input) {
-  if (input.includes("deploy")) return "DEPLOY";
-  if (input.includes("scale")) return "SCALE";
-  if (input.includes("analyze")) return "ANALYZE";
-  if (input.includes("memory")) return "MEMORY";
-  return "CHAT";
-}
-
-/**
- * =========================
- * EXECUTION ENGINE
- * =========================
- */
-function execute(intent) {
-  switch (intent) {
-    case "DEPLOY":
-      return { action: "deploy", status: "system deployed" };
-
-    case "SCALE":
-      return { action: "scale", status: "system scaled" };
-
-    case "ANALYZE":
-      return { action: "analysis", status: "data processed" };
-
-    case "MEMORY":
-      return { action: "memory", status: "memory retrieved" };
-
-    default:
-      return { action: "chat", status: "response generated" };
-  }
-}
-
-/**
- * =========================
- * AI CORE
- * =========================
- */
-function runAI(input, userId = "guest") {
-  const memory = memoryDB.get(userId) || [];
-
-  const lang = languageV9(input, memory);
-  const result = execute(lang.intent);
-
-  const updatedMemory = [
-    ...memory,
-    {
-      input,
-      intent: lang.intent,
-      time: Date.now()
-    }
-  ];
-
-  memoryDB.set(userId, updatedMemory);
-
-  broadcast({
-    type: "update",
-    userId,
-    result
-  });
-
-  return {
-    input,
-    userId,
-    language: lang,
-    result,
-    memorySize: updatedMemory.length
-  };
-}
-
-/**
- * =========================
- * API ROUTES
- * =========================
- */
-app.get("/", (req, res) => {
+// ===== BASIC API =====
+app.get("/api/status", (req, res) => {
   res.json({
-    system: "BLUE v31",
-    status: "online",
-    type: "saas-ai-platform"
+    system: BLUE.name,
+    version: BLUE.version,
+    status: BLUE.status,
+    timeLayer: BLUE.timeLayer,
+    serverTime: new Date().toISOString()
   });
 });
 
-app.post("/api/ai", (req, res) => {
-  const { input, userId } = req.body;
+// ===== TIME LAYER (UTC+14 SIMULATION) =====
+app.get("/api/time/utc14", (req, res) => {
+  const now = new Date();
 
-  if (!input) {
-    return res.status(400).json({ error: "input required" });
+  // UTC+14 offset = +14 hours
+  const utc14 = new Date(now.getTime() + (14 * 60 * 60 * 1000));
+
+  res.json({
+    layer: "UTC+14",
+    time: utc14.toISOString(),
+    note: "Front-edge global time layer (Kiribati / Line Islands)"
+  });
+});
+
+// ===== MEMORY CORE (SIMPLE SIMULATION) =====
+app.post("/api/memory/save", (req, res) => {
+  const { data, type } = req.body;
+
+  const entry = {
+    id: Date.now(),
+    type: type || "short",
+    data,
+    timestamp: new Date().toISOString()
+  };
+
+  if (entry.type === "long") {
+    BLUE.memory.longTerm.push(entry);
+  } else {
+    BLUE.memory.shortTerm.push(entry);
   }
 
-  const output = runAI(input, userId || "guest");
-
-  res.json(output);
+  res.json({ success: true, entry });
 });
 
-app.get("/api/memory/:userId", (req, res) => {
-  res.json(memoryDB.get(req.params.userId) || []);
+app.get("/api/memory", (req, res) => {
+  res.json(BLUE.memory);
 });
 
-/**
- * =========================
- * SERVER + WEBSOCKET
- * =========================
- */
-const server = app.listen(process.env.PORT || 4000, () => {
-  console.log("BLUE v31 RUNNING");
-});
-
-const wss = new WebSocketServer({ server });
-
-function broadcast(data) {
-  wss.clients.forEach(client => {
-    if (client.readyState === 1) {
-      client.send(JSON.stringify(data));
-    }
+// ===== LANGUAGE SYSTEM =====
+app.get("/api/languages", (req, res) => {
+  res.json({
+    active: BLUE.languages,
+    default: "en",
+    multilingual: true
   });
-}
+});
+
+// ===== START SERVER =====
+app.listen(PORT, () => {
+  console.log(`BLUE SYSTEM ONLINE`);
+  console.log(`PORT: ${PORT}`);
+  console.log(`TIME LAYER: UTC+14 ACTIVE`);
+});
