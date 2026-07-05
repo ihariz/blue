@@ -1,14 +1,16 @@
 {
-  "name": "blue-v6-live-ai",
-  "version": "6.1.0",
+  "name": "blue-v6-full",
+  "version": "6.0.0",
+  "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.18.3",
+    "express": "^4.21.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
+    "mongoose": "^8.0.0",
     "openai": "^4.0.0"
   }
 }
