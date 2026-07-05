@@ -1,7 +1,7 @@
 {
-  "name": "blue-v27-autonomous-ai-cloud",
+  "name": "blue-v27-ai-cloud",
   "version": "27.0.0",
-  "description": "BLUE v27 Autonomous Global AI Cloud System",
+  "description": "BLUE v27 Autonomous AI Cloud System",
   "main": "server.js",
   "type": "module",
   "scripts": {
