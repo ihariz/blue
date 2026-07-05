@@ -1,19 +1,17 @@
 {
-  "name": "blue-saas-v28",
-  "version": "28.0.0",
-  "description": "BLUE SaaS AI Dashboard Platform",
+  "name": "blue-v30-ai-memory-language",
+  "version": "30.0.0",
+  "description": "BLUE v30 AI SaaS with Memory + Language System",
   "main": "server.js",
   "type": "module",
 
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "node server.js"
   },
 
   "dependencies": {
     "express": "^4.19.2",
-    "cors": "^2.8.5",
-    "ws": "^8.18.0"
+    "cors": "^2.8.5"
   },
 
   "engines": {
@@ -22,10 +20,10 @@
 
   "keywords": [
     "ai",
+    "memory",
+    "language-model",
     "saas",
-    "dashboard",
-    "blue-system",
-    "autonomous-ai"
+    "blue-system"
   ],
 
   "license": "MIT"
