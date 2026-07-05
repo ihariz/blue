@@ -1,91 +1,106 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
-
-dotenv.config();
-
-import { CognitiveLanguageV7 } from "./ai/language/cognitiveV7.js";
 
 const app = express();
 
 app.use(cors());
-app.use(express.json({ limit: "1mb" }));
-
-const lang = new CognitiveLanguageV7();
-
-/**
- * BASIC LOGGING MIDDLEWARE
- */
-app.use((req, res, next) => {
-  console.log(`[BLUE v27] ${req.method} ${req.url}`);
-  next();
-});
+app.use(express.json());
 
 /**
  * HEALTH CHECK
  */
-app.get("/health", (req, res) => {
+app.get("/", (req, res) => {
   res.json({
     system: "BLUE v27",
     status: "ONLINE",
-    uptime: process.uptime(),
-    mode: "AUTONOMOUS AI CLOUD"
+    type: "AUTONOMOUS AI CLOUD CORE",
+    version: "27.0.0"
   });
 });
+
+/**
+ * SIMPLE LANGUAGE ENGINE (v7 CORE LIGHT)
+ */
+function cognitiveParse(input) {
+  return {
+    intent: detectIntent(input),
+    complexity: input.length,
+    route: route(input)
+  };
+}
+
+function detectIntent(input) {
+  if (input.includes("deploy")) return "DEPLOY_SYSTEM";
+  if (input.includes("scale")) return "SCALE_INFRA";
+  if (input.includes("analyze")) return "DATA_ANALYSIS";
+  if (input.includes("replicate")) return "REPLICATION";
+  return "GENERAL";
+}
+
+function route(input) {
+  if (input.includes("asia")) return "REGION_ASIA";
+  if (input.includes("eu")) return "REGION_EU";
+  return "GLOBAL";
+}
+
+/**
+ * EXECUTION ENGINE
+ */
+async function execute(intent) {
+  switch (intent) {
+    case "DEPLOY_SYSTEM":
+      return { action: "deploy", status: "system deployed" };
+
+    case "SCALE_INFRA":
+      return { action: "scale", status: "infrastructure scaled" };
+
+    case "DATA_ANALYSIS":
+      return { action: "analyze", status: "analysis complete" };
+
+    case "REPLICATION":
+      return { action: "replicate", status: "node simulation created (safe mode)" };
+
+    default:
+      return { action: "compute", status: "processed" };
+  }
+}
 
 /**
  * MAIN AI ENDPOINT
  */
 app.post("/ai", async (req, res) => {
   try {
-    const input = req.body?.input;
+    const input = req.body.input;
 
-    if (!input || typeof input !== "string") {
+    if (!input) {
       return res.status(400).json({
-        system: "BLUE v27",
-        error: "Invalid input"
+        error: "input required"
       });
     }
 
-    // LANGUAGE LAYER (v7)
-    const parsed = lang.parse(input);
+    const parsed = cognitiveParse(input);
+    const result = await execute(parsed.intent);
 
-    // EXECUTION LAYER
-    const execution = await execute(parsed);
-
-    return res.json({
+    res.json({
       system: "BLUE v27",
       input,
       parsed,
-      execution,
-      timestamp: Date.now()
+      result
     });
 
   } catch (err) {
-    console.error("[BLUE ERROR]", err);
-
-    return res.status(500).json({
+    res.status(500).json({
       system: "BLUE v27",
-      error: err.message || "Unknown error"
+      error: err.message
     });
   }
 });
 
 /**
- * CORE EXECUTION ENGINE
+ * START SERVER
  */
-async function execute(parsed) {
-  switch (parsed.intent) {
+const PORT = process.env.PORT || 4000;
 
-    case "DEPLOY_SYSTEM":
-      return {
-        action: "deploy",
-        status: "distributed deployment executed",
-        nodes: Math.floor(Math.random() * 10) + 1
-      };
-
-    case "SCALE_INFRA":
-      return {
-        action: "scale",
-        status: "auto-scaling completed",
-        scaleFactor: Math.random().
+app.listen(PORT, () => {
+  console.log("BLUE v27 RUNNING ON PORT", PORT);
+});
