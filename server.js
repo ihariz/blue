@@ -1,106 +1,53 @@
 import express from "express";
 import cors from "cors";
+import { WebSocketServer } from "ws";
+
+import { runAI } from "./ai/engine.js";
+import { memory } from "./memory/store.js";
 
 const app = express();
-
 app.use(cors());
 app.use(express.json());
+app.use(express.static("public"));
 
 /**
- * HEALTH CHECK
+ * AI ENDPOINT
  */
-app.get("/", (req, res) => {
-  res.json({
-    system: "BLUE v27",
-    status: "ONLINE",
-    type: "AUTONOMOUS AI CLOUD CORE",
-    version: "27.0.0"
-  });
+app.post("/api/ai", async (req, res) => {
+  const input = req.body.input;
+
+  const result = await runAI(input);
+
+  memory.add({ input, result });
+
+  broadcast({ type: "AI_RESULT", data: result });
+
+  res.json(result);
 });
 
 /**
- * SIMPLE LANGUAGE ENGINE (v7 CORE LIGHT)
+ * MEMORY VIEW (SaaS feature)
  */
-function cognitiveParse(input) {
-  return {
-    intent: detectIntent(input),
-    complexity: input.length,
-    route: route(input)
-  };
-}
-
-function detectIntent(input) {
-  if (input.includes("deploy")) return "DEPLOY_SYSTEM";
-  if (input.includes("scale")) return "SCALE_INFRA";
-  if (input.includes("analyze")) return "DATA_ANALYSIS";
-  if (input.includes("replicate")) return "REPLICATION";
-  return "GENERAL";
-}
-
-function route(input) {
-  if (input.includes("asia")) return "REGION_ASIA";
-  if (input.includes("eu")) return "REGION_EU";
-  return "GLOBAL";
-}
+app.get("/api/history", (req, res) => {
+  res.json(memory.getAll());
+});
 
 /**
- * EXECUTION ENGINE
+ * SERVER START
  */
-async function execute(intent) {
-  switch (intent) {
-    case "DEPLOY_SYSTEM":
-      return { action: "deploy", status: "system deployed" };
-
-    case "SCALE_INFRA":
-      return { action: "scale", status: "infrastructure scaled" };
-
-    case "DATA_ANALYSIS":
-      return { action: "analyze", status: "analysis complete" };
-
-    case "REPLICATION":
-      return { action: "replicate", status: "node simulation created (safe mode)" };
-
-    default:
-      return { action: "compute", status: "processed" };
-  }
-}
+const server = app.listen(process.env.PORT || 4000, () => {
+  console.log("BLUE SaaS v28 RUNNING");
+});
 
 /**
- * MAIN AI ENDPOINT
+ * WEBSOCKET (REALTIME DASHBOARD)
  */
-app.post("/ai", async (req, res) => {
-  try {
-    const input = req.body.input;
+const wss = new WebSocketServer({ server });
 
-    if (!input) {
-      return res.status(400).json({
-        error: "input required"
-      });
+function broadcast(msg) {
+  wss.clients.forEach(client => {
+    if (client.readyState === 1) {
+      client.send(JSON.stringify(msg));
     }
-
-    const parsed = cognitiveParse(input);
-    const result = await execute(parsed.intent);
-
-    res.json({
-      system: "BLUE v27",
-      input,
-      parsed,
-      result
-    });
-
-  } catch (err) {
-    res.status(500).json({
-      system: "BLUE v27",
-      error: err.message
-    });
-  }
-});
-
-/**
- * START SERVER
- */
-const PORT = process.env.PORT || 4000;
-
-app.listen(PORT, () => {
-  console.log("BLUE v27 RUNNING ON PORT", PORT);
-});
+  });
+}
