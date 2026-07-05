@@ -1,90 +1,154 @@
 import express from "express";
 import cors from "cors";
+import { WebSocketServer } from "ws";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static("public"));
 
 /**
- * SYSTEM STATUS
- */
-app.get("/", (req, res) => {
-  res.json({
-    system: "BLUE v30",
-    status: "online",
-    layer: "memory + language ai core"
-  });
-});
-
-/**
- * ADVANCED MEMORY STORE (USER CONTEXT MEMORY)
+ * =========================
+ * MEMORY SYSTEM (SIMPLE SAAS CORE)
+ * =========================
  */
 const memoryDB = new Map();
 
 /**
- * LANGUAGE ENGINE v8 (COGNITIVE LAYER)
+ * =========================
+ * LANGUAGE ENGINE v9 (CLEAN COGNITIVE LAYER)
+ * =========================
  */
-function languageV8(input, memory) {
-  const context = memory.slice(-5);
-
+function languageV9(input, memory) {
   return {
     intent: detectIntent(input),
-    sentiment: detectSentiment(input),
-    contextUsed: context,
-    languageGraph: buildLanguageGraph(input),
-    responseStyle: adaptStyle(context)
+    contextLevel: memory.length,
+    tokens: tokenize(input),
+    risk: input.length > 200 ? "high" : "low"
   };
 }
 
-/**
- * INTENT DETECTION
- */
+function tokenize(input) {
+  return input.split(" ").map((t, i) => ({
+    token: t,
+    index: i
+  }));
+}
+
 function detectIntent(input) {
   if (input.includes("deploy")) return "DEPLOY";
   if (input.includes("scale")) return "SCALE";
-  if (input.includes("learn")) return "LEARN";
-  if (input.includes("memory")) return "MEMORY_QUERY";
+  if (input.includes("analyze")) return "ANALYZE";
+  if (input.includes("memory")) return "MEMORY";
   return "CHAT";
 }
 
 /**
- * SIMPLE SENTIMENT LAYER
+ * =========================
+ * EXECUTION ENGINE
+ * =========================
  */
-function detectSentiment(input) {
-  if (input.includes("error")) return "negative";
-  if (input.includes("good")) return "positive";
-  return "neutral";
+function execute(intent) {
+  switch (intent) {
+    case "DEPLOY":
+      return { action: "deploy", status: "system deployed" };
+
+    case "SCALE":
+      return { action: "scale", status: "system scaled" };
+
+    case "ANALYZE":
+      return { action: "analysis", status: "data processed" };
+
+    case "MEMORY":
+      return { action: "memory", status: "memory retrieved" };
+
+    default:
+      return { action: "chat", status: "response generated" };
+  }
 }
 
 /**
- * LANGUAGE GRAPH (STRUCTURED THINKING)
- */
-function buildLanguageGraph(input) {
-  return input.split(" ").map((word, i) => ({
-    node: word,
-    index: i,
-    link: input.split(" ").filter(w => w !== word)
-  }));
-}
-
-/**
- * ADAPTIVE STYLE BASED ON MEMORY
- */
-function adaptStyle(memory) {
-  if (memory.length > 10) return "advanced-user";
-  if (memory.length > 3) return "intermediate-user";
-  return "new-user";
-}
-
-/**
- * CORE AI ENGINE
+ * =========================
+ * AI CORE
+ * =========================
  */
 function runAI(input, userId = "guest") {
-  const userMemory = memoryDB.get(userId) || [];
+  const memory = memoryDB.get(userId) || [];
 
-  const lang = languageV8(input, userMemory);
+  const lang = languageV9(input, memory);
+  const result = execute(lang.intent);
 
-  const output = processIntent(lang.intent, input);
+  const updatedMemory = [
+    ...memory,
+    {
+      input,
+      intent: lang.intent,
+      time: Date.now()
+    }
+  ];
 
-  const updatedMemory =
+  memoryDB.set(userId, updatedMemory);
+
+  broadcast({
+    type: "update",
+    userId,
+    result
+  });
+
+  return {
+    input,
+    userId,
+    language: lang,
+    result,
+    memorySize: updatedMemory.length
+  };
+}
+
+/**
+ * =========================
+ * API ROUTES
+ * =========================
+ */
+app.get("/", (req, res) => {
+  res.json({
+    system: "BLUE v31",
+    status: "online",
+    type: "saas-ai-platform"
+  });
+});
+
+app.post("/api/ai", (req, res) => {
+  const { input, userId } = req.body;
+
+  if (!input) {
+    return res.status(400).json({ error: "input required" });
+  }
+
+  const output = runAI(input, userId || "guest");
+
+  res.json(output);
+});
+
+app.get("/api/memory/:userId", (req, res) => {
+  res.json(memoryDB.get(req.params.userId) || []);
+});
+
+/**
+ * =========================
+ * SERVER + WEBSOCKET
+ * =========================
+ */
+const server = app.listen(process.env.PORT || 4000, () => {
+  console.log("BLUE v31 RUNNING");
+});
+
+const wss = new WebSocketServer({ server });
+
+function broadcast(data) {
+  wss.clients.forEach(client => {
+    if (client.readyState === 1) {
+      client.send(JSON.stringify(data));
+    }
+  });
+}
