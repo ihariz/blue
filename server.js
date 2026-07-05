@@ -1,88 +1,96 @@
 const express = require("express");
-const path = require("path");
-const fs = require("fs");
+const os = require("os");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+app.use(express.json());
 
-// ===== BLUE CORE STATE =====
-const BLUE = {
-  name: "BLUE",
-  version: "v16.0",
-  status: "ACTIVE",
-  timeLayer: "UTC+14",
-  languages: ["en", "ms", "zh", "ar", "ja", "ko", "fr", "de", "es"],
-  memory: {
-    shortTerm: [],
-    longTerm: []
-  }
+// =====================
+// BLUE STATE ENGINE
+// =====================
+const BLUE_STATE = {
+  mode: "HYBRID",
+  online: true,
+  version: "BLUE_CORE_v1",
+  timezone_layer: "UTC-12_to_UTC+14",
 };
 
-// ===== MIDDLEWARE =====
-app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
-
-// ===== BASIC API =====
-app.get("/api/status", (req, res) => {
-  res.json({
-    system: BLUE.name,
-    version: BLUE.version,
-    status: BLUE.status,
-    timeLayer: BLUE.timeLayer,
-    serverTime: new Date().toISOString()
-  });
-});
-
-// ===== TIME LAYER (UTC+14 SIMULATION) =====
-app.get("/api/time/utc14", (req, res) => {
-  const now = new Date();
-
-  // UTC+14 offset = +14 hours
-  const utc14 = new Date(now.getTime() + (14 * 60 * 60 * 1000));
-
-  res.json({
-    layer: "UTC+14",
-    time: utc14.toISOString(),
-    note: "Front-edge global time layer (Kiribati / Line Islands)"
-  });
-});
-
-// ===== MEMORY CORE (SIMPLE SIMULATION) =====
-app.post("/api/memory/save", (req, res) => {
-  const { data, type } = req.body;
-
-  const entry = {
-    id: Date.now(),
-    type: type || "short",
-    data,
-    timestamp: new Date().toISOString()
+// =====================
+// OFFLINE BRAIN
+// =====================
+function offlineBrain(input) {
+  return {
+    source: "offline",
+    response: `BLUE OFFLINE CORE processed: ${input}`,
+    intelligence: "local-simulated",
   };
+}
 
-  if (entry.type === "long") {
-    BLUE.memory.longTerm.push(entry);
-  } else {
-    BLUE.memory.shortTerm.push(entry);
+// =====================
+// ONLINE BRAIN (mock / API ready)
+// =====================
+async function onlineBrain(input) {
+  try {
+    // placeholder for real AI API (OpenAI / others)
+    return {
+      source: "online",
+      response: `BLUE ONLINE CORE processed: ${input}`,
+      intelligence: "cloud-enhanced",
+    };
+  } catch (e) {
+    return offlineBrain(input);
+  }
+}
+
+// =====================
+// HYBRID ORCHESTRATOR
+// =====================
+async function blueCore(input) {
+  const isOnline = BLUE_STATE.online;
+
+  const offline = offlineBrain(input);
+
+  if (!isOnline) {
+    return {
+      mode: "OFFLINE_ONLY",
+      ...offline,
+    };
   }
 
-  res.json({ success: true, entry });
-});
+  const online = await onlineBrain(input);
 
-app.get("/api/memory", (req, res) => {
-  res.json(BLUE.memory);
-});
+  return {
+    mode: "HYBRID_ACTIVE",
+    merge: {
+      offline: offline.response,
+      online: online.response,
+    },
+    final: `BLUE HYBRID RESULT → ${online.response}`,
+  };
+}
 
-// ===== LANGUAGE SYSTEM =====
-app.get("/api/languages", (req, res) => {
+// =====================
+// API ROUTE
+// =====================
+app.post("/blue", async (req, res) => {
+  const input = req.body.input || "empty";
+
+  const result = await blueCore(input);
+
   res.json({
-    active: BLUE.languages,
-    default: "en",
-    multilingual: true
+    system: BLUE_STATE,
+    result,
+    node: os.hostname(),
+    time: new Date().toISOString(),
   });
 });
 
-// ===== START SERVER =====
-app.listen(PORT, () => {
-  console.log(`BLUE SYSTEM ONLINE`);
-  console.log(`PORT: ${PORT}`);
-  console.log(`TIME LAYER: UTC+14 ACTIVE`);
+// =====================
+// STATUS
+// =====================
+app.get("/", (req, res) => {
+  res.send("BLUE HYBRID CORE ACTIVE");
+});
+
+app.listen(3000, () => {
+  console.log("BLUE CORE RUNNING ON PORT 3000");
 });
