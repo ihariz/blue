@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import OpenAI from "openai";
+import { v4 as uuidv4 } from "uuid";
 
 dotenv.config();
 
@@ -10,42 +11,50 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const hasMongo = !!process.env.MONGO_URI;
-const hasAI = !!process.env.OPENAI_API_KEY;
-
 /* =========================
-   MONGODB
+   DATABASE CONNECT
 ========================= */
+const hasMongo = !!process.env.MONGO_URI;
+
 if (hasMongo) {
   mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log("BLUE SAAS: MONGO CONNECTED"))
+    .then(() => console.log("BLUE V7 DB CONNECTED"))
     .catch(err => console.log(err));
 }
 
+/* =========================
+   USER MEMORY MODEL
+========================= */
 const MemorySchema = new mongoose.Schema({
+  userId: String,
   input: String,
   output: String,
   createdAt: { type: Date, default: Date.now }
 });
 
-const Memory = hasMongo ? mongoose.model("blue_memory", MemorySchema) : null;
+const Memory = hasMongo ? mongoose.model("blue_memory_v7", MemorySchema) : null;
 
 /* =========================
-   OPENAI
+   OPENAI BRAIN
 ========================= */
-const openai = hasAI
+const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   : null;
 
 /* =========================
-   🟦 SAAS DASHBOARD UI
+   SIMPLE SESSION SYSTEM
+========================= */
+const sessions = new Map();
+
+/* =========================
+   DASHBOARD UI (SAAS OS)
 ========================= */
 app.get("/", (req, res) => {
   res.send(`
 <!DOCTYPE html>
 <html>
 <head>
-<title>BLUE SAAS DASHBOARD</title>
+<title>BLUE V7 SAAS OS</title>
 <style>
 body {
   margin:0;
@@ -55,31 +64,14 @@ body {
   display:flex;
 }
 
-/* SIDEBAR */
 .sidebar {
   width:220px;
   background:#0b1020;
   padding:20px;
-  border-right:1px solid #00d4ff;
   height:100vh;
+  border-right:1px solid #00d4ff;
 }
 
-.sidebar h2 {
-  font-size:16px;
-}
-
-.menu {
-  margin-top:20px;
-}
-
-.menu div {
-  padding:10px;
-  margin:5px 0;
-  border:1px solid #00d4ff;
-  cursor:pointer;
-}
-
-/* MAIN */
 .main {
   flex:1;
   padding:20px;
@@ -89,7 +81,6 @@ body {
   border:1px solid #00d4ff;
   padding:15px;
   margin-bottom:15px;
-  background:#0b1020;
 }
 
 input, button {
@@ -106,14 +97,11 @@ input, button {
 <body>
 
 <div class="sidebar">
-  <h2>BLUE SAAS</h2>
-
-  <div class="menu">
-    <div>Dashboard</div>
-    <div>AI Brain</div>
-    <div>Memory</div>
-    <div>Status</div>
-  </div>
+  <h3>BLUE V7 OS</h3>
+  <p>Dashboard</p>
+  <p>AI Brain</p>
+  <p>Memory</p>
+  <p>Users</p>
 </div>
 
 <div class="main">
@@ -121,14 +109,14 @@ input, button {
   <div class="card">
     <h3>System Status</h3>
     <p>Server: ONLINE</p>
-    <p>AI: ${hasAI ? "ACTIVE" : "OFF"}</p>
-    <p>Memory: ${hasMongo ? "MONGODB" : "LOCAL"}</p>
+    <p>AI: ${openai ? "ACTIVE" : "OFF"}</p>
+    <p>DB: ${hasMongo ? "MONGO CONNECTED" : "LOCAL"}</p>
   </div>
 
   <div class="card">
-    <h3>AI Brain</h3>
+    <h3>AI Brain (V7)</h3>
     <input id="input" placeholder="Ask BLUE..." />
-    <button onclick="send()">Run AI</button>
+    <button onclick="send()">RUN</button>
     <p id="out"></p>
   </div>
 
@@ -155,31 +143,54 @@ async function send() {
 });
 
 /* =========================
-   AI BRAIN
+   GET OR CREATE USER SESSION
+========================= */
+function getUser(req) {
+  let userId = req.headers["x-user-id"];
+
+  if (!userId) {
+    userId = uuidv4();
+  }
+
+  if (!sessions.has(userId)) {
+    sessions.set(userId, []);
+  }
+
+  return userId;
+}
+
+/* =========================
+   AI BRAIN (USER-AWARE)
 ========================= */
 app.post("/api/brain", async (req, res) => {
   try {
-    const { input } = req.body;
+    const input = req.body.input;
+    const userId = getUser(req);
 
     if (!openai) {
-      return res.json({ output: "AI OFF - missing API key" });
+      return res.json({ output: "AI OFF (missing API key)" });
     }
 
     const ai = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: "You are BLUE SAAS AI SYSTEM." },
+        { role: "system", content: "You are BLUE V7 SaaS OS AI." },
         { role: "user", content: input }
       ]
     });
 
     const output = ai.choices[0].message.content;
 
+    sessions.get(userId).push({ input, output });
+
     if (Memory) {
-      await Memory.create({ input, output });
+      await Memory.create({ userId, input, output });
     }
 
-    res.json({ output });
+    res.json({
+      userId,
+      output
+    });
 
   } catch (err) {
     res.json({ error: err.message });
@@ -187,26 +198,30 @@ app.post("/api/brain", async (req, res) => {
 });
 
 /* =========================
-   MEMORY API
+   USER MEMORY
 ========================= */
-app.get("/api/memory", async (req, res) => {
-  if (!Memory) return res.json({ message: "Memory OFF" });
+app.get("/api/memory/:userId", async (req, res) => {
+  const userId = req.params.userId;
 
-  const data = await Memory.find().sort({ createdAt: -1 }).limit(50);
+  if (!Memory) {
+    return res.json({ message: "DB OFF" });
+  }
 
-  res.json({ count: data.length, data });
+  const data = await Memory.find({ userId }).sort({ createdAt: -1 });
+
+  res.json({ userId, memory: data });
 });
 
 /* =========================
-   STATUS API
+   STATUS
 ========================= */
 app.get("/api/status", (req, res) => {
   res.json({
-    system: "BLUE SAAS V6",
+    system: "BLUE V7 SAAS OS",
     status: "ONLINE",
-    ai: hasAI,
-    memory: hasMongo,
-    uptime: process.uptime()
+    users: sessions.size,
+    ai: !!openai,
+    db: hasMongo
   });
 });
 
@@ -216,5 +231,5 @@ app.get("/api/status", (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log("BLUE SAAS DASHBOARD RUNNING");
+  console.log("BLUE V7 SAAS OS RUNNING");
 });
