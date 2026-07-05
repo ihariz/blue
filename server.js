@@ -1,94 +1,91 @@
 import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 import { CognitiveLanguageV7 } from "./ai/language/cognitiveV7.js";
 
 const app = express();
+
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
 
 const lang = new CognitiveLanguageV7();
 
 /**
- * Health check endpoint
+ * BASIC LOGGING MIDDLEWARE
+ */
+app.use((req, res, next) => {
+  console.log(`[BLUE v27] ${req.method} ${req.url}`);
+  next();
+});
+
+/**
+ * HEALTH CHECK
  */
 app.get("/health", (req, res) => {
   res.json({
     system: "BLUE v27",
     status: "ONLINE",
-    type: "AUTONOMOUS AI CLOUD"
+    uptime: process.uptime(),
+    mode: "AUTONOMOUS AI CLOUD"
   });
 });
 
 /**
- * Main AI endpoint
+ * MAIN AI ENDPOINT
  */
 app.post("/ai", async (req, res) => {
   try {
-    const input = req.body.input;
+    const input = req.body?.input;
 
-    if (!input) {
+    if (!input || typeof input !== "string") {
       return res.status(400).json({
-        error: "Missing input"
+        system: "BLUE v27",
+        error: "Invalid input"
       });
     }
 
-    // Language parsing (v7 cognition layer)
+    // LANGUAGE LAYER (v7)
     const parsed = lang.parse(input);
 
-    // Execution engine (simplified cloud runtime)
-    const result = await execute(parsed);
+    // EXECUTION LAYER
+    const execution = await execute(parsed);
 
-    res.json({
+    return res.json({
       system: "BLUE v27",
       input,
       parsed,
-      result
+      execution,
+      timestamp: Date.now()
     });
+
   } catch (err) {
-    res.status(500).json({
+    console.error("[BLUE ERROR]", err);
+
+    return res.status(500).json({
       system: "BLUE v27",
-      error: err.message
+      error: err.message || "Unknown error"
     });
   }
 });
 
 /**
- * Execution layer (core brain logic)
+ * CORE EXECUTION ENGINE
  */
 async function execute(parsed) {
   switch (parsed.intent) {
+
     case "DEPLOY_SYSTEM":
       return {
         action: "deploy",
-        status: "system deployed across cloud nodes"
+        status: "distributed deployment executed",
+        nodes: Math.floor(Math.random() * 10) + 1
       };
 
     case "SCALE_INFRA":
       return {
         action: "scale",
-        status: "infrastructure scaled successfully"
-      };
-
-    case "DATA_ANALYSIS":
-      return {
-        action: "analyze",
-        status: "distributed analysis completed"
-      };
-
-    default:
-      return {
-        action: "compute",
-        status: "general computation executed"
-      };
-  }
-}
-
-/**
- * Start server
- */
-const PORT = process.env.PORT || 4000;
-
-app.listen(PORT, () => {
-  console.log(`BLUE v27 ONLINE on port ${PORT}`);
-});
+        status: "auto-scaling completed",
+        scaleFactor: Math.random().
