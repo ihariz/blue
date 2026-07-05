@@ -1,38 +1,39 @@
-const express = require("express");
-const cors = require("cors");
-
-const brain = require("./brain");
-const security = require("./security");
-const autonomous = require("./autonomous");
+import express from "express";
+import cors from "cors";
+import { runGlobalAI } from "./ai/orchestrator.js";
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
-// 🔷 HEARTBEAT (Blue sentiasa hidup)
-setInterval(() => {
-  autonomous.run();
-}, 4000);
-
-// MAIN API
-app.post("/api/blue", (req, res) => {
-  const { message, ip } = req.body;
-
-  if (!security(ip)) {
-    return res.json({
-      reply: "🛡️ BLUE DEFENDER: ACCESS BLOCKED"
-    });
-  }
-
-  const reply = brain(message);
-
+// HEALTH CHECK
+app.get("/health", (req, res) => {
   res.json({
-    reply,
-    mode: "AUTONOMOUS ACTIVE",
-    status: "BLUE ONLINE"
+    system: "BLUE v27",
+    status: "ONLINE",
+    mode: "GLOBAL AI CLOUD"
   });
 });
 
-app.listen(3000, () => {
-  console.log("🔷 BLUE AUTONOMOUS SYSTEM ONLINE");
+// MAIN AI ENDPOINT
+app.post("/ai", async (req, res) => {
+  try {
+    const result = await runGlobalAI(req.body.input);
+
+    res.json({
+      system: "BLUE v27 AUTONOMOUS CLOUD",
+      result
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: err.message
+    });
+  }
+});
+
+const PORT = process.env.PORT || 4000;
+
+app.listen(PORT, () => {
+  console.log(`BLUE v27 running on port ${PORT}`);
 });
