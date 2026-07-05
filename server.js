@@ -11,11 +11,19 @@ app.use(cors());
 app.use(express.json());
 
 /* =========================
-   MONGODB (PERMANENT MEMORY)
+   SAFE START (NO CRASH)
 ========================= */
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("BLUE MEMORY CONNECTED"))
-  .catch(err => console.log("DB ERROR:", err));
+const hasMongo = !!process.env.MONGO_URI;
+const hasAI = !!process.env.OPENAI_API_KEY;
+
+/* =========================
+   MONGO (ONLY IF AVAILABLE)
+========================= */
+if (hasMongo) {
+  mongoose.connect(process.env.MONGO_URI)
+    .then(() => console.log("BLUE: MONGO CONNECTED"))
+    .catch(err => console.log("MONGO ERROR:", err));
+}
 
 const MemorySchema = new mongoose.Schema({
   input: String,
@@ -23,23 +31,23 @@ const MemorySchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-const Memory = mongoose.model("blue_memory", MemorySchema);
+const Memory = hasMongo ? mongoose.model("blue_memory", MemorySchema) : null;
 
 /* =========================
-   OPENAI BRAIN
+   OPENAI (SAFE INIT)
 ========================= */
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+const openai = hasAI
+  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  : null;
 
 /* =========================
-   DASHBOARD UI
+   DASHBOARD (NO PLACEHOLDER)
 ========================= */
 app.get("/", (req, res) => {
   res.send(`
   <html>
   <head>
-    <title>BLUE V6 FULL AI</title>
+    <title>BLUE V6 SYSTEM</title>
     <style>
       body {
         margin:0;
@@ -51,66 +59,44 @@ app.get("/", (req, res) => {
         align-items:center;
         height:100vh;
       }
-
       .box {
-        width:500px;
+        width:520px;
         border:1px solid #00d4ff;
         padding:20px;
         background:#0b1020;
       }
-
-      input, button {
-        width:100%;
-        padding:10px;
-        margin-top:10px;
-      }
-
-      .status {
-        margin-top:10px;
-        color:#9fffd1;
+      .row {
+        margin:8px 0;
       }
     </style>
   </head>
 
   <body>
     <div class="box">
-      <h2>BLUE V6 FULL AI SYSTEM</h2>
+      <h2>BLUE V6 PRODUCTION SYSTEM</h2>
 
-      <p>AI Brain: ACTIVE</p>
-      <p>Memory: MONGODB</p>
-      <p>Status: ONLINE</p>
-
-      <input id="input" placeholder="Ask BLUE AI..." />
-      <button onclick="send()">SEND</button>
-
-      <p id="out" class="status"></p>
+      <div class="row">Server: ONLINE</div>
+      <div class="row">AI Brain: ${hasAI ? "ACTIVE" : "NOT CONNECTED"}</div>
+      <div class="row">Memory: ${hasMongo ? "MONGODB ACTIVE" : "LOCAL MODE"}</div>
+      <div class="row">Status: STABLE</div>
     </div>
-
-    <script>
-      async function send() {
-        const input = document.getElementById("input").value;
-
-        const res = await fetch("/api/brain", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ input })
-        });
-
-        const data = await res.json();
-        document.getElementById("out").innerText = data.output;
-      }
-    </script>
   </body>
   </html>
   `);
 });
 
 /* =========================
-   🧠 AI BRAIN + SAVE MEMORY
+   AI BRAIN (SAFE MODE)
 ========================= */
 app.post("/api/brain", async (req, res) => {
   try {
     const { input } = req.body;
+
+    if (!openai) {
+      return res.json({
+        output: "AI not connected. Missing OPENAI_API_KEY"
+      });
+    }
 
     const ai = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -122,25 +108,27 @@ app.post("/api/brain", async (req, res) => {
 
     const output = ai.choices[0].message.content;
 
-    await Memory.create({ input, output });
+    if (Memory) {
+      await Memory.create({ input, output });
+    }
 
-    res.json({
-      input,
-      output,
-      saved: true
-    });
+    res.json({ output });
 
   } catch (err) {
-    res.json({
-      error: err.message
-    });
+    res.json({ error: err.message });
   }
 });
 
 /* =========================
-   MEMORY VIEW
+   MEMORY (SAFE)
 ========================= */
 app.get("/api/memory", async (req, res) => {
+  if (!Memory) {
+    return res.json({
+      message: "Memory not enabled (MongoDB missing)"
+    });
+  }
+
   const data = await Memory.find().sort({ createdAt: -1 }).limit(50);
 
   res.json({
@@ -154,19 +142,19 @@ app.get("/api/memory", async (req, res) => {
 ========================= */
 app.get("/api/status", (req, res) => {
   res.json({
-    system: "BLUE V6 FULL",
+    system: "BLUE V6 FIXED",
     status: "ONLINE",
-    ai: "ACTIVE",
-    memory: "MONGODB",
+    ai: hasAI ? "READY" : "OFF",
+    memory: hasMongo ? "PERMANENT" : "LOCAL",
     uptime: process.uptime()
   });
 });
 
 /* =========================
-   START SERVER
+   START
 ========================= */
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log("BLUE V6 FULL SYSTEM RUNNING");
+  console.log("BLUE V6 FIXED RUNNING");
 });
