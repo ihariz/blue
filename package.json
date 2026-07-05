@@ -1,6 +1,6 @@
 {
-  "name": "blue-v6-full",
-  "version": "6.0.0",
+  "name": "blue-v6-production",
+  "version": "6.0.1",
   "type": "module",
   "main": "server.js",
   "scripts": {
