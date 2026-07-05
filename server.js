@@ -8,25 +8,34 @@ import OpenAI from "openai";
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+/* =========================
+   FIX FOR RENDER / PROXY
+========================= */
+app.set("trust proxy", 1);
+
+app.use(cors({
+  origin: "*"
+}));
+
 app.use(express.json());
 
 /* =========================
-   AI BRAIN ENGINE (REAL GPT)
+   OPENAI GPT BRAIN
 ========================= */
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
 /* =========================
-   DATABASE
+   DATABASE CONNECT
 ========================= */
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("BLUE V6 DB ONLINE"))
-  .catch(err => console.log(err));
+  .then(() => console.log("BLUE V6 DB CONNECTED"))
+  .catch(err => console.log("DB ERROR:", err));
 
 /* =========================
-   USER MODEL
+   MODELS
 ========================= */
 const UserSchema = new mongoose.Schema({
   email: String,
@@ -34,11 +43,6 @@ const UserSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-const User = mongoose.model("blue_users", UserSchema);
-
-/* =========================
-   MEMORY MODEL
-========================= */
 const MemorySchema = new mongoose.Schema({
   userId: String,
   input: String,
@@ -46,25 +50,40 @@ const MemorySchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+const User = mongoose.model("blue_users", UserSchema);
 const Memory = mongoose.model("blue_memory", MemorySchema);
 
 /* =========================
    AUTH MIDDLEWARE
 ========================= */
-function auth(req, res, next) {
+const auth = (req, res, next) => {
   const token = req.headers.authorization;
-  if (!token) return res.status(401).json({ error: "NO TOKEN" });
+
+  if (!token) {
+    return res.status(401).json({ error: "NO TOKEN" });
+  }
 
   try {
     req.user = jwt.verify(token, process.env.JWT_SECRET);
     next();
   } catch {
-    res.status(401).json({ error: "INVALID TOKEN" });
+    return res.status(401).json({ error: "INVALID TOKEN" });
   }
-}
+};
 
 /* =========================
-   🧠 BLUE V6 REAL AI BRAIN
+   HEALTH CHECK (RENDER)
+========================= */
+app.get("/", (req, res) => {
+  res.json({
+    system: "BLUE V6 LIVE",
+    status: "RUNNING",
+    time: new Date().toISOString()
+  });
+});
+
+/* =========================
+   🧠 REAL AI BRAIN
 ========================= */
 app.post("/api/brain", auth, async (req, res) => {
   const { input } = req.body;
@@ -75,9 +94,12 @@ app.post("/api/brain", auth, async (req, res) => {
       messages: [
         {
           role: "system",
-          content: "You are BLUE V6 AI OS. You are structured, autonomous, and precise."
+          content: "You are BLUE V6 AI OS. Be precise, structured, and intelligent."
         },
-        { role: "user", content: input }
+        {
+          role: "user",
+          content: input
+        }
       ]
     });
 
@@ -97,14 +119,14 @@ app.post("/api/brain", auth, async (req, res) => {
 
   } catch (err) {
     res.status(500).json({
-      error: "AI FAILURE",
-      details: err.message
+      error: "AI ERROR",
+      message: err.message
     });
   }
 });
 
 /* =========================
-   MEMORY RECALL SYSTEM
+   MEMORY SYSTEM
 ========================= */
 app.get("/api/memory", auth, async (req, res) => {
   const data = await Memory.find({ userId: req.user.id })
@@ -112,30 +134,29 @@ app.get("/api/memory", auth, async (req, res) => {
     .limit(50);
 
   res.json({
-    system: "BLUE MEMORY CORE",
     count: data.length,
     memory: data
   });
 });
 
 /* =========================
-   STATUS ENGINE
+   STATUS
 ========================= */
 app.get("/api/status", (req, res) => {
   res.json({
-    system: "BLUE V6 AI OS",
+    system: "BLUE V6",
     status: "ONLINE",
     brain: "GPT-4o-mini",
     memory: "ACTIVE",
-    architecture: "MODULAR SaaS AI"
+    deploy: "RENDER READY"
   });
 });
 
 /* =========================
-   SERVER START
+   START SERVER
 ========================= */
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`BLUE V6 AI OS RUNNING ON PORT ${PORT}`);
+  console.log(`BLUE V6 RUNNING ON PORT ${PORT}`);
 });
