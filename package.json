@@ -1,11 +1,14 @@
 {
-  "name": "blue-live",
-  "version": "1.0.0",
+  "name": "blue-v6-live-ai",
+  "version": "6.1.0",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.18.3"
+    "express": "^4.18.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "openai": "^4.0.0"
   }
 }
