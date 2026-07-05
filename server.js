@@ -2,26 +2,38 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
 app.use(cors());
 app.use(express.json());
 
 /* =========================
-   DATABASE CONNECTION
+   DATABASE CONNECT
 ========================= */
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("BLUE DB CONNECTED"))
   .catch(err => console.log("DB ERROR:", err));
 
 /* =========================
+   USER SCHEMA
+========================= */
+const UserSchema = new mongoose.Schema({
+  email: { type: String, unique: true },
+  password: String,
+  createdAt: { type: Date, default: Date.now }
+});
+
+const User = mongoose.model("blue_users", UserSchema);
+
+/* =========================
    MEMORY SCHEMA
 ========================= */
 const MemorySchema = new mongoose.Schema({
+  userId: String,
   input: String,
   output: String,
   timestamp: { type: Date, default: Date.now }
@@ -30,65 +42,110 @@ const MemorySchema = new mongoose.Schema({
 const Memory = mongoose.model("blue_memory", MemorySchema);
 
 /* =========================
-   STATUS
+   AUTH MIDDLEWARE
 ========================= */
-app.get("/api/status", (req, res) => {
-  res.json({
-    system: "BLUE V4",
-    status: "ONLINE",
-    memory: "ACTIVE",
-    database: "MONGO_CONNECTED"
+const auth = (req, res, next) => {
+  const token = req.headers.authorization;
+
+  if (!token) return res.status(401).json({ error: "NO TOKEN" });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch {
+    res.status(401).json({ error: "INVALID TOKEN" });
+  }
+};
+
+/* =========================
+   REGISTER
+========================= */
+app.post("/api/register", async (req, res) => {
+  const { email, password } = req.body;
+
+  const hashed = await bcrypt.hash(password, 10);
+
+  const user = await User.create({
+    email,
+    password: hashed
   });
+
+  res.json({ message: "USER CREATED", userId: user._id });
 });
 
 /* =========================
-   BRAIN + MEMORY WRITE
+   LOGIN
 ========================= */
-app.post("/api/brain", async (req, res) => {
+app.post("/api/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  const user = await User.findOne({ email });
+  if (!user) return res.status(401).json({ error: "USER NOT FOUND" });
+
+  const valid = await bcrypt.compare(password, user.password);
+  if (!valid) return res.status(401).json({ error: "WRONG PASSWORD" });
+
+  const token = jwt.sign(
+    { id: user._id, email: user.email },
+    process.env.JWT_SECRET
+  );
+
+  res.json({ token });
+});
+
+/* =========================
+   BLUE BRAIN (AI CORE LOGIC)
+========================= */
+app.post("/api/brain", auth, async (req, res) => {
   const { input } = req.body;
 
-  const output = `Processed: ${input}`;
+  const output = `BLUE processed: ${input}`;
 
-  // Save to memory DB
-  const record = new Memory({
+  await Memory.create({
+    userId: req.user.id,
     input,
     output
   });
 
-  await record.save();
-
   res.json({
-    system: "BLUE V4 BRAIN",
+    system: "BLUE V4",
     input,
-    output,
-    memory: "SAVED",
-    timestamp: Date.now()
+    output
   });
 });
 
 /* =========================
    MEMORY RECALL
 ========================= */
-app.get("/api/memory", async (req, res) => {
-  const logs = await Memory.find().sort({ timestamp: -1 }).limit(20);
+app.get("/api/memory", auth, async (req, res) => {
+  const data = await Memory.find({ userId: req.user.id })
+    .sort({ timestamp: -1 })
+    .limit(50);
 
   res.json({
-    system: "BLUE MEMORY CORE",
-    count: logs.length,
-    data: logs
+    count: data.length,
+    memory: data
   });
 });
 
 /* =========================
-   HEALTH
+   STATUS CHECK
 ========================= */
-app.get("/health", (req, res) => {
-  res.send("BLUE V4 OK + MEMORY ACTIVE");
+app.get("/api/status", (req, res) => {
+  res.json({
+    system: "BLUE V4 SAAS CORE",
+    status: "ONLINE",
+    modules: ["AUTH", "MEMORY", "BRAIN"],
+    time: new Date().toISOString()
+  });
 });
 
 /* =========================
-   START
+   START SERVER
 ========================= */
+const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
-  console.log(`BLUE V4 MEMORY CORE RUNNING ON PORT ${PORT}`);
+  console.log(`BLUE V4 RUNNING ON PORT ${PORT}`);
 });
