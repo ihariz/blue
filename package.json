@@ -1,6 +1,6 @@
 {
-  "name": "blue-v6-saas",
-  "version": "6.1.0",
+  "name": "blue-v7-saas-os",
+  "version": "7.0.0",
   "type": "module",
   "main": "server.js",
   "scripts": {
@@ -11,6 +11,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "mongoose": "^8.0.0",
-    "openai": "^4.0.0"
+    "openai": "^4.0.0",
+    "uuid": "^9.0.1"
   }
 }
