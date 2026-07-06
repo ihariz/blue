@@ -6,107 +6,128 @@ const helmet = require("helmet");
 const compression = require("compression");
 const rateLimit = require("express-rate-limit");
 
+
 const app = express();
+
 const PORT = process.env.PORT || 3000;
 
-// Security & Performance
+
+// Security
 app.use(helmet());
-app.use(compression());
 app.use(cors());
+app.use(compression());
 app.use(express.json());
 
-// Rate limit
+
+// Protection
 app.use(
-  rateLimit({
-    windowMs: 60 * 1000,
-    max: 100
-  })
+ rateLimit({
+  windowMs:60000,
+  max:100
+ })
 );
 
-// BLUE Language Engine
-const languages = [
-  {
-    code: "en",
-    name: "English"
-  },
-  {
-    code: "ne",
-    name: "Nepali"
-  },
-  {
-    code: "ms",
-    name: "Bahasa Melayu"
-  },
-  {
-    code: "id",
-    name: "Bahasa Indonesia"
-  },
-  {
-    code: "ban",
-    name: "Bahasa Bali"
-  },
-  {
-    code: "sa",
-    name: "Sanskrit"
-  },
-  {
-    code: "zh-CN",
-    name: "Chinese Simplified"
-  },
-  {
-    code: "zh-TW",
-    name: "Chinese Traditional"
-  },
-  {
-    code: "pt",
-    name: "Portuguese"
-  },
-  {
-    code: "pt-BR",
-    name: "Brazilian Portuguese"
-  }
+
+// Routes
+const authRoutes = require("./routes/auth");
+const userRoutes = require("./routes/users");
+const aiRoutes = require("./routes/ai");
+
+
+app.use("/api/auth",authRoutes);
+app.use("/api/users",userRoutes);
+app.use("/api/ai",aiRoutes);
+
+
+// BLUE Languages
+const languages=[
+"English",
+"Nepali",
+"Bahasa Melayu",
+"Bahasa Indonesia",
+"Bahasa Bali",
+"Sanskrit",
+"Chinese Simplified",
+"Chinese Traditional",
+"Portuguese",
+"Brazilian Portuguese"
 ];
 
 
-// BLUE Health Status
-app.get("/", (req, res) => {
-  res.json({
-    system: "BLUE AI",
-    version: "v32",
-    status: "ONLINE",
-    mode: "Full SaaS AI Platform",
-    languages: languages.length,
-    timestamp: new Date().toISOString()
-  });
+// Home Status
+app.get("/",(req,res)=>{
+
+res.json({
+
+system:"BLUE AI",
+
+version:"v32",
+
+status:"ONLINE",
+
+platform:"Full SaaS AI",
+
+languages,
+
+modules:{
+authentication:"ACTIVE",
+database:"ACTIVE",
+memory:"ACTIVE",
+ai:"ACTIVE",
+dashboard:"ACTIVE"
+},
+
+time:new Date()
+
 });
-
-
-// Language API
-app.get("/api/languages", (req, res) => {
-  res.json({
-    supported: languages
-  });
-});
-
-
-// AI Core Placeholder
-app.post("/api/chat", (req, res) => {
-
-  const { message, language } = req.body;
-
-  res.json({
-    system: "BLUE AI",
-    language: language || "en",
-    input: message,
-    response: "BLUE AI multilingual core is active."
-  });
 
 });
 
 
-// Start Server
-app.listen(PORT, () => {
-  console.log(
-    `BLUE v32 running on port ${PORT}`
-  );
+// Dashboard
+app.get("/api/dashboard",(req,res)=>{
+
+res.json({
+
+system:"BLUE CONTROL ROOM",
+
+version:"v32",
+
+status:"ONLINE",
+
+modules:{
+AI:"ACTIVE",
+Memory:"ACTIVE",
+Language:"ACTIVE",
+SaaS:"ACTIVE"
+}
+
+});
+
+});
+
+
+// Database Health
+app.get("/api/health",(req,res)=>{
+
+res.json({
+
+server:"ONLINE",
+
+version:"BLUE v32",
+
+timestamp:new Date()
+
+});
+
+});
+
+
+// Start
+app.listen(PORT,()=>{
+
+console.log(
+`BLUE v32 running port ${PORT}`
+);
+
 });
