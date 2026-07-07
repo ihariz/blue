@@ -1,69 +1,51 @@
-import express from "express";
-import helmet from "helmet";
-import cors from "cors";
-import compression from "compression";
-import morgan from "morgan";
-import dotenv from "dotenv";
+import mongoose from "mongoose";
 
-dotenv.config();
+await mongoose.connect(process.env.MONGO_URI);
 
-const app = express();
-
-app.use(helmet());
-app.use(cors());
-app.use(compression());
-app.use(express.json());
-app.use(morgan("combined"));
-
-const BLUE_CORE = {
-  identity: {
-    name: "Izzul Hariz",
-    system: "BLUE AI Core"
-  },
+const userSchema = new mongoose.Schema({
+  name: String,
 
   timeLayer: {
     primary: {
-      location: "Selangor, Malaysia",
-      timezone: "Asia/Kuala_Lumpur",
-      utc: "UTC+8"
+      location: String,
+      timezone: String,
+      utc: String
     },
 
     secondary: {
-      location: "Germany",
-      timezone: "Europe/Berlin",
-      utc: "UTC+2"
+      location: String,
+      timezone: String,
+      utc: String
     }
-  },
-
-  status: "ONLINE"
-};
-
-app.get("/", (req, res) => {
-  res.json({
-    blue: BLUE_CORE,
-    message: "BLUE Time Identity Core Active"
-  });
+  }
 });
 
-app.get("/time", (req, res) => {
-  const nowMalaysia = new Date().toLocaleString(
-    "en-MY",
-    { timeZone: "Asia/Kuala_Lumpur" }
-  );
+const BlueMemory = mongoose.model(
+  "BlueMemory",
+  userSchema
+);
 
-  const nowGermany = new Date().toLocaleString(
-    "de-DE",
-    { timeZone: "Europe/Berlin" }
-  );
 
-  res.json({
-    malaysia: nowMalaysia,
-    germany: nowGermany
-  });
+app.get("/memory", async (req,res)=>{
+
+ const memory = await BlueMemory.findOne();
+
+ res.json(memory);
+
 });
 
-const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log(`BLUE Core running on port ${PORT}`);
+app.post("/memory", async(req,res)=>{
+
+ const saved = await BlueMemory.findOneAndUpdate(
+ {},
+ req.body,
+ {
+  upsert:true,
+  new:true
+ }
+ );
+
+ res.json(saved);
+
 });
