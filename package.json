@@ -1,15 +1,14 @@
 {
   "name": "blue-v32-core",
   "version": "32.1.0",
-  "description": "BLUE AI Dashboard Core v32.1 Stability Upgrade",
+  "description": "BLUE AI Dashboard Core v32.1 Active Server",
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "start": "node server.js"
   },
   "engines": {
-    "node": ">=18 <23"
+    "node": ">=18"
   },
   "dependencies": {
     "compression": "^1.7.4",
