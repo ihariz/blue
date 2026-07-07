@@ -4,11 +4,10 @@ import cors from "cors";
 import compression from "compression";
 import morgan from "morgan";
 import dotenv from "dotenv";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
 import rateLimit from "express-rate-limit";
 import { v4 as uuidv4 } from "uuid";
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 
@@ -16,7 +15,8 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 const VERSION = "BLUE v32.1.0";
-const INSTANCE_ID = uuidv4();
+
+const INSTANCE = uuidv4();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,32 +33,119 @@ app.use(cors());
 
 app.use(
   rateLimit({
-    windowMs: 60 * 1000,
-    max: 120,
-    standardHeaders: true,
-    legacyHeaders: false
+    windowMs: 60000,
+    max: 100
   })
 );
 
 app.use(compression());
+
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+app.use(express.urlencoded({
+  extended: true
+}));
+
 app.use(morgan("combined"));
 
 
-const publicPath = path.join(__dirname, "public");
+const publicFolder = path.join(
+  __dirname,
+  "public"
+);
 
-app.use(express.static(publicPath));
+app.use(
+  express.static(publicFolder)
+);
 
 
-let languages = [];
+app.get("/", (req,res)=>{
 
-try {
+  res.sendFile(
+    path.join(
+      publicFolder,
+      "index.html"
+    ),
+    (err)=>{
 
-  const langPath = path.join(
-    __dirname,
-    "data",
-    "languages.json"
+      if(err){
+        res.send(`
+        <h1>BLUE AI CORE ONLINE</h1>
+        <p>${VERSION}</p>
+        `);
+      }
+
+    }
   );
 
-  languages
+});
+
+
+app.get("/health",(req,res)=>{
+
+  res.json({
+    status:"online",
+    version:VERSION,
+    instance:INSTANCE,
+    uptime:process.uptime()
+  });
+
+});
+
+
+app.get("/api/status",(req,res)=>{
+
+  res.json({
+
+    blue:"active",
+    version:VERSION,
+    server:"Render",
+    node:process.version,
+    started:startTime
+
+  });
+
+});
+
+
+app.get("/api/version",(req,res)=>{
+
+  res.json({
+
+    project:"BLUE",
+    version:VERSION
+
+  });
+
+});
+
+
+app.get("/api/ping",(req,res)=>{
+
+  res.json({
+    ping:"ok"
+  });
+
+});
+
+
+app.use((req,res)=>{
+
+  res.status(404).json({
+    error:"Route not found"
+  });
+
+});
+
+
+app.listen(PORT,()=>{
+
+console.log(`
+====================
+ BLUE ONLINE
+ ${VERSION}
+ PORT ${PORT}
+====================
+`);
+
+});
