@@ -7,13 +7,16 @@ import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import rateLimit from "express-rate-limit";
+import { v4 as uuidv4 } from "uuid";
 
 dotenv.config();
 
 const app = express();
 
 const PORT = process.env.PORT || 3000;
-const VERSION = "BLUE v32.1 Active";
+const VERSION = "BLUE v32.1.0";
+const INSTANCE_ID = uuidv4();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,90 +30,35 @@ app.use(
 );
 
 app.use(cors());
+
+app.use(
+  rateLimit({
+    windowMs: 60 * 1000,
+    max: 120,
+    standardHeaders: true,
+    legacyHeaders: false
+  })
+);
+
 app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("combined"));
 
 
-const publicFolder = path.join(__dirname, "public");
+const publicPath = path.join(__dirname, "public");
 
-app.use(express.static(publicFolder));
+app.use(express.static(publicPath));
 
 
 let languages = [];
 
 try {
 
-  const file = path.join(
+  const langPath = path.join(
     __dirname,
     "data",
     "languages.json"
   );
 
-  languages = JSON.parse(
-    fs.readFileSync(file, "utf8")
-  ).languages;
-
-} catch {
-
-  languages = [
-    "English",
-    "Bahasa Melayu",
-    "Indonesia",
-    "中文",
-    "日本語",
-    "한국어"
-  ];
-
-}
-
-
-app.get("/", (req,res)=>{
-
-  const dashboard =
-    path.join(publicFolder,"index.html");
-
-  if(fs.existsSync(dashboard)){
-    res.sendFile(dashboard);
-  }
-  else {
-    res.send(`
-    <html>
-    <body>
-    <h1>BLUE AI CORE ONLINE</h1>
-    <p>${VERSION}</p>
-    <p>Dashboard waiting</p>
-    </body>
-    </html>
-    `);
-  }
-
-});
-
-
-app.get("/health",(req,res)=>{
-
-  res.json({
-
-    status:"online",
-    system:"BLUE CORE",
-    version:VERSION,
-    uptime:process.uptime(),
-    time:new Date()
-
-  });
-
-});
-
-
-app.get("/api/status",(req,res)=>{
-
-  res.json({
-
-    blue:"active",
-    status:"running",
-    version:VERSION,
-    server:"Render",
-    started:startTime,
-    node:
+  languages
