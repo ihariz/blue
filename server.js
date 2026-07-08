@@ -4,6 +4,27 @@ import cors from "cors";
 import compression from "compression";
 import morgan from "morgan";
 import dotenv from "dotenv";
+import http from "http";
+
+
+import { connectDatabase }
+from "./src/database/database.js";
+
+
+import authRoutes
+from "./src/auth/auth.routes.js";
+
+
+import securityRoutes
+from "./src/routes/security.routes.js";
+
+
+import observabilityRoutes
+from "./src/routes/observability.routes.js";
+
+
+import { createRealtimeServer }
+from "./src/realtime/websocket.server.js";
 
 
 dotenv.config();
@@ -12,110 +33,175 @@ dotenv.config();
 const app = express();
 
 
-const PORT = process.env.PORT || 3000;
+const server =
+http.createServer(app);
 
 
-const VERSION = "BLUE v1.0.0";
+const PORT =
+process.env.PORT || 3000;
+
+
+const VERSION =
+"BLUE Enterprise v2.0 STEP 100";
+
 
 
 /*
- Security Middleware
+ Security
 */
 
 app.use(
-  helmet()
+helmet()
 );
 
 
 app.use(
-  cors({
-    origin: "*"
-  })
+cors({
+ origin:"*"
+})
 );
 
 
 app.use(
-  compression()
+compression()
 );
 
 
 app.use(
-  express.json()
+express.json()
 );
 
 
 app.use(
-  morgan("combined")
+morgan("combined")
 );
+
 
 
 /*
- Health API
+ Database
+*/
+
+if(process.env.MONGO_URI){
+
+ await connectDatabase();
+
+}
+
+
+
+/*
+ Routes
+*/
+
+
+app.use(
+"/api/auth",
+authRoutes
+);
+
+
+app.use(
+"/api/security",
+securityRoutes
+);
+
+
+app.use(
+"/api",
+observabilityRoutes
+);
+
+
+
+/*
+ Health
 */
 
 app.get(
-  "/health",
-  (req,res)=>{
+"/health",
+(req,res)=>{
 
-    res.json({
+ res.json({
 
-      system:
-        "BLUE AI",
+  system:
+   "BLUE AI",
 
-      version:
-        VERSION,
+  version:
+   VERSION,
 
-      status:
-        "online",
+  status:
+   "online",
 
-      uptime:
-        process.uptime(),
+  uptime:
+   process.uptime(),
 
-      time:
-        new Date().toISOString()
+  timestamp:
+   new Date().toISOString()
 
-    });
+ });
 
-  }
-);
+});
+
 
 
 /*
- Main API
+ Main Status
 */
 
 app.get(
-  "/api/status",
-  (req,res)=>{
+"/api/status",
+(req,res)=>{
 
-    res.json({
+ res.json({
 
-      name:
-        "BLUE AI Platform",
+  name:
+   "BLUE Enterprise",
 
-      version:
-        VERSION,
+  version:
+   VERSION,
 
-      modules:
-      [
-        "AI Core",
-        "Database Layer",
-        "Security",
-        "Dashboard",
-        "API Gateway"
-      ],
+  modules:[
 
-      status:
-        "ready"
+   "AI Core",
 
-    });
+   "Database",
 
-  }
-);
+   "Authentication",
+
+   "Security",
+
+   "Realtime",
+
+   "Dashboard",
+
+   "Monitoring",
+
+   "Cloud"
+
+  ],
+
+  status:
+   "ready"
+
+ });
+
+});
+
 
 
 /*
- 404 Handler
+ WebSocket
+*/
+
+createRealtimeServer(
+server
+);
+
+
+
+/*
+ 404
 */
 
 app.use(
@@ -123,15 +209,13 @@ app.use(
 
  res.status(404).json({
 
-   error:
-    "Route not found",
-
-   path:
-    req.originalUrl
+  error:
+   "Route not found"
 
  });
 
 });
+
 
 
 /*
@@ -143,33 +227,31 @@ app.use(
 
  console.error(err);
 
-
  res.status(500).json({
 
-   error:
-    "Internal Server Error"
+  error:
+   "Internal Server Error"
 
  });
 
 });
 
 
-/*
- Start Server
-*/
 
-app.listen(
+server.listen(
 PORT,
 ()=>{
 
- console.log(
-  `
- BLUE AI PLATFORM
- Version: ${VERSION}
- Port: ${PORT}
- Status: ONLINE
- `
- );
+ console.log(`
 
-}
-);
+ BLUE ENTERPRISE AI
+
+ Version: ${VERSION}
+
+ Port: ${PORT}
+
+ Status: ONLINE
+
+ `);
+
+});
