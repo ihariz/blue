@@ -4,254 +4,57 @@ import cors from "cors";
 import compression from "compression";
 import morgan from "morgan";
 import dotenv from "dotenv";
-import http from "http";
-
-
-import { connectDatabase }
-from "./src/database/database.js";
-
-
-import authRoutes
-from "./src/auth/auth.routes.js";
-
-
-import securityRoutes
-from "./src/routes/security.routes.js";
-
-
-import observabilityRoutes
-from "./src/routes/observability.routes.js";
-
-
-import { createRealtimeServer }
-from "./src/realtime/websocket.server.js";
-
 
 dotenv.config();
 
-
 const app = express();
+const PORT = process.env.PORT || 3000;
 
+app.use(helmet());
+app.use(cors());
+app.use(compression());
+app.use(express.json());
+app.use(morgan("combined"));
 
-const server =
-http.createServer(app);
+const BLUE = {
+  name: "BLUE",
+  version: "v9.0",
+  mode: "6G Simulation",
+  status: "ONLINE",
+  integrity: true,
+  modules: {
+    guardian: true,
+    reportCenter: true,
+    investigation: "simulation",
+    insurance: "simulation",
+    piggyBank: "simulation",
+    businessFund: "simulation",
+    trading: "THB/SGD Simulation",
+    quranKnowledge: true,
+    languageEngine: true,
+    memoryLayer: "simulation"
+  }
+};
 
-
-const PORT =
-process.env.PORT || 3000;
-
-
-const VERSION =
-"BLUE Enterprise v2.0 STEP 100";
-
-
-
-/*
- Security
-*/
-
-app.use(
-helmet()
-);
-
-
-app.use(
-cors({
- origin:"*"
-})
-);
-
-
-app.use(
-compression()
-);
-
-
-app.use(
-express.json()
-);
-
-
-app.use(
-morgan("combined")
-);
-
-
-
-/*
- Database
-*/
-
-if(process.env.MONGO_URI){
-
- await connectDatabase();
-
-}
-
-
-
-/*
- Routes
-*/
-
-
-app.use(
-"/api/auth",
-authRoutes
-);
-
-
-app.use(
-"/api/security",
-securityRoutes
-);
-
-
-app.use(
-"/api",
-observabilityRoutes
-);
-
-
-
-/*
- Health
-*/
-
-app.get(
-"/health",
-(req,res)=>{
-
- res.json({
-
-  system:
-   "BLUE AI",
-
-  version:
-   VERSION,
-
-  status:
-   "online",
-
-  uptime:
-   process.uptime(),
-
-  timestamp:
-   new Date().toISOString()
-
- });
-
+app.get("/", (req, res) => {
+  res.json({
+    message: "BLUE v9.0 6G Simulation Server",
+    blue: BLUE
+  });
 });
 
-
-
-/*
- Main Status
-*/
-
-app.get(
-"/api/status",
-(req,res)=>{
-
- res.json({
-
-  name:
-   "BLUE Enterprise",
-
-  version:
-   VERSION,
-
-  modules:[
-
-   "AI Core",
-
-   "Database",
-
-   "Authentication",
-
-   "Security",
-
-   "Realtime",
-
-   "Dashboard",
-
-   "Monitoring",
-
-   "Cloud"
-
-  ],
-
-  status:
-   "ready"
-
- });
-
+app.get("/health", (req, res) => {
+  res.json({
+    status: "healthy",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  });
 });
 
-
-
-/*
- WebSocket
-*/
-
-createRealtimeServer(
-server
-);
-
-
-
-/*
- 404
-*/
-
-app.use(
-(req,res)=>{
-
- res.status(404).json({
-
-  error:
-   "Route not found"
-
- });
-
+app.get("/api/status", (req, res) => {
+  res.json(BLUE);
 });
 
-
-
-/*
- Error Handler
-*/
-
-app.use(
-(err,req,res,next)=>{
-
- console.error(err);
-
- res.status(500).json({
-
-  error:
-   "Internal Server Error"
-
- });
-
-});
-
-
-
-server.listen(
-PORT,
-()=>{
-
- console.log(`
-
- BLUE ENTERPRISE AI
-
- Version: ${VERSION}
-
- Port: ${PORT}
-
- Status: ONLINE
-
- `);
-
+app.listen(PORT, () => {
+  console.log(`BLUE v9.0 running on port ${PORT}`);
 });
